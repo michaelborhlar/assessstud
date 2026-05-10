@@ -1,0 +1,62 @@
+import { useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import api from '../../api'
+import { useAuth } from '../../context/AuthContext'
+
+export default function StudentLogin() {
+  const [form, setForm] = useState({ username:'', password:'' })
+  const [error, setError] = useState('')
+  const { login } = useAuth()
+  const nav = useNavigate()
+
+  async function submit(e) {
+    e.preventDefault()
+    try {
+      const r = await api.post('/auth/login/', form)
+      if (r.data.user.role !== 'student') { setError('Use admin login for admin accounts.'); return }
+      login(r.data.user, r.data.access)
+      nav('/dashboard')
+    } catch {
+      setError('Invalid username or password')
+    }
+  }
+
+  const s = styles
+  return (
+    <div style={s.page}>
+      <div style={s.card}>
+        <div style={s.logo}>AssessStud</div>
+        <h2 style={s.title}>Student Login</h2>
+        {error && <p style={s.error}>{error}</p>}
+        <form onSubmit={submit}>
+          <div style={s.group}>
+            <label style={s.label}>Username</label>
+            <input style={s.input} required value={form.username}
+              onChange={e => setForm({...form, username: e.target.value})} />
+          </div>
+          <div style={s.group}>
+            <label style={s.label}>Password</label>
+            <input style={s.input} type="password" required value={form.password}
+              onChange={e => setForm({...form, password: e.target.value})} />
+          </div>
+          <button style={s.btn} type="submit">Login</button>
+        </form>
+        <p style={s.link}>No account? <Link to="/register">Register here</Link></p>
+        <p style={s.link}><Link to="/admin/login">Admin login →</Link></p>
+      </div>
+    </div>
+  )
+}
+
+const styles = {
+  page:  { minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'linear-gradient(135deg,#667eea,#764ba2)' },
+  card:  { background:'#fff', borderRadius:16, padding:'2.5rem', width:'100%', maxWidth:400, boxShadow:'0 20px 60px rgba(0,0,0,0.2)' },
+  logo:  { fontSize:22, fontWeight:700, color:'#667eea', marginBottom:8 },
+  title: { fontSize:20, fontWeight:600, marginBottom:20 },
+  group: { marginBottom:14 },
+  label: { display:'block', fontSize:13, fontWeight:500, marginBottom:5, color:'#555' },
+  input: { width:'100%', padding:'10px 12px', borderRadius:8, border:'1.5px solid #e0e0e0', fontSize:14 },
+  btn:   { width:'100%', padding:'12px', background:'linear-gradient(135deg,#667eea,#764ba2)', color:'#fff', border:'none', borderRadius:8, fontSize:15, fontWeight:600, cursor:'pointer', marginTop:8 },
+  error: { color:'#e74c3c', fontSize:13, marginBottom:12, background:'#fdecea', padding:'8px 12px', borderRadius:8 },
+  link:  { textAlign:'center', marginTop:12, fontSize:13, color:'#777' },
+}
