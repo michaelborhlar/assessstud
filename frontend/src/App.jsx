@@ -1,3 +1,4 @@
+import React from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import StudentRegister  from './pages/student/Register'
 import StudentLogin     from './pages/student/Login'
