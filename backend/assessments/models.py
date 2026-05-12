@@ -7,15 +7,15 @@ class QuestionBank(models.Model):
         ('bio','Biology'),('phy','Physics'),('chem','Chemistry'),
         ('geo','Geography'),('hist','History'),('other','Other'),
     ]
-    subject     = models.CharField(max_length=20, choices=SUBJECT_CHOICES)
-    topic       = models.CharField(max_length=200)
-    text        = models.TextField()
-    image       = models.ImageField(upload_to='questions/', null=True, blank=True)
-    created_by  = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    created_at  = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.subject}: {self.text[:60]}"
+    subject      = models.CharField(max_length=20, choices=SUBJECT_CHOICES)
+    topic        = models.CharField(max_length=200)
+    text         = models.TextField()
+    image        = models.ImageField(upload_to='questions/', null=True, blank=True)
+    # for MCQ this is A/B/C/D, for typed this is the expected answer text
+    correct_text_answer = models.TextField(blank=True)
+    solution_description = models.TextField(blank=True)  # admin explanation
+    created_by   = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    created_at   = models.DateTimeField(auto_now_add=True)
 
 class QuestionChoice(models.Model):
     question    = models.ForeignKey(QuestionBank, on_delete=models.CASCADE, related_name='choices')
