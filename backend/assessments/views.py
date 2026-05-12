@@ -171,6 +171,9 @@ class SubmitAssessmentView(APIView):
 
         correct = 0
         total = 0
+        breakdown = []
+        has_image_upload = False
+
         for q_id_str, ans_data in answers.items():
             try:
                 q = QuestionBank.objects.get(id=int(q_id_str))
@@ -178,6 +181,8 @@ class SubmitAssessmentView(APIView):
                 continue
 
             student_ans = StudentAnswer(student_assessment=sa, question=q)
+            is_correct = None
+            total += 1
 
             if sa.assessment.answer_type == 'mcq':
                 choice_id = ans_data.get('choice_id')
@@ -185,37 +190,66 @@ class SubmitAssessmentView(APIView):
                     try:
                         ch = QuestionChoice.objects.get(id=choice_id)
                         student_ans.selected_choice = ch
-                        student_ans.is_correct = ch.is_correct
-                        if ch.is_correct:
+                        is_correct = ch.is_correct
+                        if is_correct:
                             correct += 1
                     except QuestionChoice.DoesNotExist:
                         pass
-                total += 1
+
             elif sa.assessment.answer_type == 'typed':
+                typed = ans_data.get('text', '').strip().lower()
+                expected = q.correct_text_answer.strip().lower()
+                if expected and typed:
+                    is_correct = typed == expected
+                    if is_correct:
+                        correct += 1
+                else:
+                    is_correct = None  # no correct answer set — manual review
                 student_ans.typed_answer = ans_data.get('text', '')
-                student_ans.is_correct = None  # manual review
+
             elif sa.assessment.answer_type == 'typed_with_image':
+                # always manual review for image uploads
                 student_ans.typed_answer = ans_data.get('text', '')
                 img_key = f"image_{q_id_str}"
                 if img_key in request.FILES:
                     student_ans.uploaded_image = request.FILES[img_key]
-                student_ans.is_correct = None
+                is_correct = None
+                has_image_upload = True
 
+            student_ans.is_correct = is_correct
+            student_ans.marks_awarded = 1 if is_correct else 0
             student_ans.save()
+
+            breakdown.append({
+                'question_id': q.id,
+                'question_text': q.text,
+                'your_answer': ans_data.get('text', '') or str(ans_data.get('choice_id', '')),
+                'correct_answer': q.correct_text_answer if sa.assessment.answer_type == 'typed' else None,
+                'solution': q.solution_description,
+                'is_correct': is_correct,
+            })
+
+        # score only if fully auto-gradeable
+        can_auto_score = sa.assessment.answer_type != 'typed_with_image'
+        score_pct = round(correct / total * 100, 1) if (can_auto_score and total > 0) else None
 
         sa.is_submitted = True
         sa.submitted_at = timezone.now()
-        if sa.assessment.answer_type == 'mcq' and total > 0:
-            sa.score = round(correct / total * 100, 1)
+        sa.score = score_pct
         sa.save()
 
-        show = sa.assessment.show_results
+        show = sa.assessment.show_results or can_auto_score
+
         return Response({
             'submitted': True,
-            'score': sa.score if show else None,
+            'score': score_pct,
+            'correct': correct,
+            'total': total,
             'show_results': show,
+            'has_image_upload': has_image_upload,
+            'breakdown': breakdown,
+            'show_solution': sa.assessment.show_solution,
         })
-
 # ── Admin: review typed answers ───────────────────────────
 class AdminReviewAnswerView(APIView):
     def patch(self, request, answer_id):
