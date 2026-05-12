@@ -42,7 +42,6 @@ export default function StudentLogin() {
           <button style={s.btn} type="submit">Login</button>
         </form>
         <p style={s.link}>No account? <Link to="/register">Register here</Link></p>
-        <p style={s.link}><Link to="/admin/login">Admin login →</Link></p>
       </div>
     </div>
   )
