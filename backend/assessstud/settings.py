@@ -84,7 +84,6 @@ CLOUDINARY_STORAGE = {
 }
 
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-MEDIA_URL = 'https://res.cloudinary.com/'
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 5MB
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
 SIMPLE_JWT = {
