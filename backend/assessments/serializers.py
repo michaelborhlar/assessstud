@@ -13,16 +13,26 @@ class ChoiceStudentSerializer(serializers.ModelSerializer):
         fields = ['id', 'label', 'text']
 
 class QuestionSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
     choices = ChoiceSerializer(many=True, read_only=True)
     class Meta:
         model = QuestionBank
         fields = ['id', 'subject', 'topic', 'text', 'image', 'choices', 'correct_text_answer', 'solution_description', 'created_at']
+    def get_image(self, obj):
+        if obj.image:
+            return obj.image.url
+        return None
 
 class QuestionStudentSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
     choices = ChoiceStudentSerializer(many=True, read_only=True)
     class Meta:
         model = QuestionBank
         fields = ['id', 'subject', 'topic', 'text', 'image', 'choices']
+    def get_image(self, obj):
+        if obj.image:
+            return obj.image.url
+        return None
 
 class AssessmentSerializer(serializers.ModelSerializer):
     class Meta:
