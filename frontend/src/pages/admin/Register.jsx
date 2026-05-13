@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import api from '../../api'
+import api, { publicApi } from '../../api'
 
 export default function AdminRegister() {
   const [form, setForm] = useState({ first_name:'', last_name:'', username:'', password:'' })
@@ -10,7 +10,7 @@ export default function AdminRegister() {
   async function submit(e) {
     e.preventDefault()
     try {
-      await api.post('/auth/register/admin/', form)
+      await publicApi.post('/auth/register/admin/', form)
       nav('/admin/login')
     } catch(err) {
       setError(JSON.stringify(err.response?.data || 'Error'))
