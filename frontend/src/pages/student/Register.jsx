@@ -8,9 +8,35 @@ export default function StudentRegister() {
   const [error, setError] = useState('')
   const nav = useNavigate()
 
-  useEffect(() => {
-    api.get('/classes/').then(r => setClasses(r.data))
-  }, [])
+const [loading, setLoading] = useState(true)
+const [retrying, setRetrying] = useState(false)
+
+useEffect(() => {
+  fetchClasses()
+}, [])
+
+async function fetchClasses() {
+  setLoading(true)
+  let attempts = 0
+  while (attempts < 5) {
+    try {
+      const r = await api.get('/classes/')
+      if (r.data && r.data.length > 0) {
+        setClasses(r.data)
+        setLoading(false)
+        setRetrying(false)
+        return
+      }
+    } catch (e) {
+      console.log('Retrying...', attempts)
+    }
+    attempts++
+    setRetrying(true)
+    await new Promise(res => setTimeout(res, 5000)) // wait 5 seconds then retry
+  }
+  setLoading(false)
+  setRetrying(false)
+}
 
   async function submit(e) {
     e.preventDefault()
