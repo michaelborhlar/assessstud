@@ -104,6 +104,23 @@ class AssessmentListCreateView(APIView):
             a.questions.set(QuestionBank.objects.filter(id__in=q_ids))
         return Response(AssessmentSerializer(a).data, status=201)
 
+class AssessmentDeleteView(APIView):
+    def delete(self, request, assessment_id):
+        if not is_admin(request.user):
+            return Response({'error': 'Forbidden'}, status=403)
+
+        try:
+            assessment = Assessment.objects.get(
+                id=assessment_id,
+                created_by=request.user
+            )
+        except Assessment.DoesNotExist:
+            return Response({'error': 'Assessment not found'}, status=404)
+
+        assessment.delete()
+
+        return Response({'message': 'Assessment deleted successfully'})
+
 # ── Student: see available assessments ────────────────────
 class StudentAssessmentListView(APIView):
     def get(self, request):
