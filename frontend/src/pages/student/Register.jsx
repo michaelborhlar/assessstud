@@ -43,7 +43,7 @@ export default function StudentRegister() {
     e.preventDefault()
     setError('')
     try {
-      await api.post('/auth/register/student/', form)
+      await publicApi.post('/auth/register/student/', form)
       nav('/login')
     } catch(err) {
       setError(JSON.stringify(err.response?.data || 'Error'))
