@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from cloudinary.models import CloudinaryField
 
 class QuestionBank(models.Model):
     SUBJECT_CHOICES = [
@@ -10,7 +11,7 @@ class QuestionBank(models.Model):
     subject      = models.CharField(max_length=20, choices=SUBJECT_CHOICES)
     topic        = models.CharField(max_length=200)
     text         = models.TextField()
-    image        = models.ImageField(upload_to='questions/', null=True, blank=True)
+    image = CloudinaryField('image', blank=True, null=True)
     # for MCQ this is A/B/C/D, for typed this is the expected answer text
     correct_text_answer = models.TextField(blank=True)
     solution_description = models.TextField(blank=True)  # admin explanation
@@ -73,7 +74,7 @@ class StudentAnswer(models.Model):
     question           = models.ForeignKey(QuestionBank, on_delete=models.CASCADE)
     selected_choice    = models.ForeignKey(QuestionChoice, null=True, blank=True, on_delete=models.SET_NULL)
     typed_answer       = models.TextField(blank=True)
-    uploaded_image     = models.ImageField(upload_to='answers/', null=True, blank=True)
+    uploaded_image = CloudinaryField('image', null=True, blank=True)
     is_correct         = models.BooleanField(null=True, blank=True)
     marks_awarded      = models.FloatField(default=0)
     admin_feedback     = models.TextField(blank=True)
