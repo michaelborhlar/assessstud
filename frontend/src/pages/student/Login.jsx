@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import api from '../../api'
+import api, { publicApi } from '../../api'
 import { useAuth } from '../../context/AuthContext'
 
 export default function StudentLogin() {
@@ -12,7 +12,7 @@ export default function StudentLogin() {
   async function submit(e) {
     e.preventDefault()
     try {
-      const r = await api.post('/auth/login/', form)
+      const r = await publicApi.post('/auth/login/', form)
       if (r.data.user.role !== 'student') { setError('Use admin login for admin accounts.'); return }
       login(r.data.user, r.data.access)
       nav('/dashboard')
