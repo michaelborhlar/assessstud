@@ -30,6 +30,8 @@ class QuestionListCreateView(APIView):
             topic=request.data.get('topic', ''),
             text=request.data.get('text'),
             image=request.FILES.get('image'),
+            correct_text_answer=request.data.get('correct_text_answer', ''),
+            solution_description=request.data.get('solution_description', ''),
             created_by=request.user
         )
         # handle choices
