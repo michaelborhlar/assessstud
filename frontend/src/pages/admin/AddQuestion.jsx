@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../../api'
 
-const SUBJECTS = ['math','eng','sci','bio','phy','chem','geo','hist','other']
+const SUBJECTS = ['math','F/math','eng','sci','bio','phy','chem','geo','hist','other']
 
 export default function AddQuestion() {
   const [form, setForm] = useState({
