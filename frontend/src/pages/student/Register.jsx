@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import api from '../../api'
+import api, { publicApi } from '../../api'  // ← add publicApi
 
 export default function StudentRegister() {
   const [classes, setClasses] = useState([])
@@ -21,7 +21,7 @@ export default function StudentRegister() {
     let attempts = 0
     while (attempts < 5) {
       try {
-        const r = await api.get('/classes/')
+        const r = await publicApi.get('/classes/')
         if (r.data && r.data.length > 0) {
           setClasses(r.data)
           setLoading(false)
