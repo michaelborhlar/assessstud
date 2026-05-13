@@ -7,6 +7,8 @@ urlpatterns = [
     path('', views.AssessmentListCreateView.as_view()),
     path('<int:assessment_id>/submissions/', views.AssessmentSubmissionsView.as_view()),
     path('answers/<int:answer_id>/review/', views.AdminReviewAnswerView.as_view()),
+    path('questions/<int:question_id>/delete/', views.QuestionDeleteView.as_view()),
+    path('assessments/<int:assessment_id>/delete/', views.AssessmentDeleteView.as_view()),
     # student
     path('my/', views.StudentAssessmentListView.as_view()),
     path('<int:assessment_id>/start/', views.StartAssessmentView.as_view()),
