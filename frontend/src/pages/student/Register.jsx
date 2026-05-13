@@ -4,39 +4,40 @@ import api from '../../api'
 
 export default function StudentRegister() {
   const [classes, setClasses] = useState([])
-  const [form, setForm] = useState({ first_name:'', last_name:'', username:'', password:'', student_class:'' })
+  const [loading, setLoading] = useState(true)
+  const [retrying, setRetrying] = useState(false)
+  const [form, setForm] = useState({
+    first_name:'', last_name:'', username:'', password:'', student_class:''
+  })
   const [error, setError] = useState('')
   const nav = useNavigate()
 
-const [loading, setLoading] = useState(true)
-const [retrying, setRetrying] = useState(false)
+  useEffect(() => {
+    fetchClasses()
+  }, [])
 
-useEffect(() => {
-  fetchClasses()
-}, [])
-
-async function fetchClasses() {
-  setLoading(true)
-  let attempts = 0
-  while (attempts < 5) {
-    try {
-      const r = await api.get('/classes/')
-      if (r.data && r.data.length > 0) {
-        setClasses(r.data)
-        setLoading(false)
-        setRetrying(false)
-        return
+  async function fetchClasses() {
+    setLoading(true)
+    let attempts = 0
+    while (attempts < 5) {
+      try {
+        const r = await api.get('/classes/')
+        if (r.data && r.data.length > 0) {
+          setClasses(r.data)
+          setLoading(false)
+          setRetrying(false)
+          return
+        }
+      } catch (e) {
+        console.log('Retrying...', attempts)
       }
-    } catch (e) {
-      console.log('Retrying...', attempts)
+      attempts++
+      setRetrying(true)
+      await new Promise(res => setTimeout(res, 5000))
     }
-    attempts++
-    setRetrying(true)
-    await new Promise(res => setTimeout(res, 5000)) // wait 5 seconds then retry
+    setLoading(false)
+    setRetrying(false)
   }
-  setLoading(false)
-  setRetrying(false)
-}
 
   async function submit(e) {
     e.preventDefault()
@@ -79,15 +80,44 @@ async function fetchClasses() {
             <input style={s.input} type="password" required value={form.password}
               onChange={e => setForm({...form, password: e.target.value})} />
           </div>
+
+          {/* Class dropdown with loading state */}
           <div style={s.group}>
             <label style={s.label}>Class</label>
-            <select style={s.input} required value={form.student_class}
-              onChange={e => setForm({...form, student_class: e.target.value})}>
-              <option value="">-- Select Class --</option>
-              {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
+            {loading ? (
+              <div style={{ ...s.input, color:'#888', background:'#f9f9f9' }}>
+                {retrying
+                  ? '⏳ Connecting to server, please wait...'
+                  : '⏳ Loading classes...'}
+              </div>
+            ) : classes.length === 0 ? (
+              <div>
+                <div style={{ ...s.input, color:'#e74c3c', border:'1.5px solid #e74c3c' }}>
+                  Could not load classes
+                </div>
+                <button type="button" onClick={fetchClasses}
+                  style={{ marginTop:6, fontSize:12, color:'#667eea', background:'none', border:'none', cursor:'pointer', textDecoration:'underline' }}>
+                  Click to retry
+                </button>
+              </div>
+            ) : (
+              <select style={s.input} required value={form.student_class}
+                onChange={e => setForm({...form, student_class: e.target.value})}>
+                <option value="">-- Select Class --</option>
+                {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            )}
           </div>
-          <button style={s.btn} type="submit">Register</button>
+
+          <button style={{
+            ...s.btn,
+            opacity: loading ? 0.6 : 1,
+            cursor: loading ? 'not-allowed' : 'pointer'
+          }}
+            type="submit"
+            disabled={loading}>
+            Register
+          </button>
         </form>
         <p style={s.link}>Already have an account? <Link to="/login">Login</Link></p>
       </div>
