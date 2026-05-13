@@ -9,3 +9,5 @@ Pillow
 python-docx
 djangorestframework-simplejwt
 django-filter
+cloudinary
+django-cloudinary-storage
