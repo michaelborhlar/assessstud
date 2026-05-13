@@ -16,7 +16,7 @@ class QuestionSerializer(serializers.ModelSerializer):
     choices = ChoiceSerializer(many=True, read_only=True)
     class Meta:
         model = QuestionBank
-        fields = ['id', 'subject', 'topic', 'text', 'image', 'choices', 'created_at']
+        fields = ['id', 'subject', 'topic', 'text', 'image', 'choices', 'correct_text_answer', 'solution_description', 'created_at']
 
 class QuestionStudentSerializer(serializers.ModelSerializer):
     choices = ChoiceStudentSerializer(many=True, read_only=True)
