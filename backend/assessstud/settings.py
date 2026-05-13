@@ -17,6 +17,8 @@ INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
+    'cloudinary',
+    'cloudinary_storage',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
@@ -27,8 +29,6 @@ INSTALLED_APPS = [
     'classes',
     'assessments',
     'content',
-    'cloudinary',
-    'cloudinary_storage',
 ]
 
 MIDDLEWARE = [
@@ -84,8 +84,8 @@ CLOUDINARY_STORAGE = {
 }
 
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-DATA_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024  # 5MB
-FILE_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 5MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=8),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
