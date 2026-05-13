@@ -46,6 +46,23 @@ class QuestionListCreateView(APIView):
             )
         return Response(QuestionSerializer(q, context={'request': request}).data, status=201)
 
+class QuestionDeleteView(APIView):
+    def delete(self, request, question_id):
+        if not is_admin(request.user):
+            return Response({'error': 'Forbidden'}, status=403)
+
+        try:
+            question = QuestionBank.objects.get(
+                id=question_id,
+                created_by=request.user
+            )
+        except QuestionBank.DoesNotExist:
+            return Response({'error': 'Question not found'}, status=404)
+
+        question.delete()
+
+        return Response({'message': 'Question deleted successfully'})
+
 # ── Assessments (admin) ────────────────────────────────────
 class AssessmentListCreateView(APIView):
     def get(self, request):
