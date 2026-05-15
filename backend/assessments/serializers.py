@@ -56,10 +56,30 @@ class StudentAssessmentSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class StudentAnswerSerializer(serializers.ModelSerializer):
+    uploaded_image = serializers.SerializerMethodField()
+    selected_choice_text = serializers.SerializerMethodField()
+
     class Meta:
         model = StudentAnswer
-        fields = '__all__'
+        fields = [
+            'id',
+            'question',
+            'selected_choice',
+            'selected_choice_text',
+            'typed_answer',
+            'uploaded_image',
+            'is_correct',
+            'marks_awarded',
+            'admin_feedback',
+            'reviewed',
+        ]
+
     def get_uploaded_image(self, obj):
         if obj.uploaded_image:
             return obj.uploaded_image.url
+        return None
+
+    def get_selected_choice_text(self, obj):
+        if obj.selected_choice:
+            return obj.selected_choice.text
         return None
