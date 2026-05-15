@@ -306,18 +306,45 @@ class SubmitAssessmentView(APIView):
 # ── Admin: review typed answers ───────────────────────────
 class AdminReviewAnswerView(APIView):
     def patch(self, request, answer_id):
+
         if not is_admin(request.user):
             return Response({'error': 'Forbidden'}, status=403)
+
         try:
             ans = StudentAnswer.objects.get(id=answer_id)
+
         except StudentAnswer.DoesNotExist:
             return Response({'error': 'Not found'}, status=404)
+
+        # update answer review
         ans.is_correct = request.data.get('is_correct', None)
         ans.marks_awarded = request.data.get('marks_awarded', 0)
         ans.admin_feedback = request.data.get('admin_feedback', '')
         ans.reviewed = True
         ans.save()
-        return Response(StudentAnswerSerializer(ans).data)
+
+        # recalculate total score for the student assessment
+        sa = ans.student_assessment
+
+        total_questions = len(sa.questions_order)
+
+        correct_answers = sa.answers.filter(
+            is_correct=True
+        ).count()
+
+        score_pct = round(
+            (correct_answers / total_questions) * 100,
+            1
+        ) if total_questions > 0 else 0
+
+        sa.score = score_pct
+        sa.save()
+
+        return Response({
+            'message': 'Reviewed successfully',
+            'new_score': sa.score,
+            'answer': StudentAnswerSerializer(ans).data
+        })
 
 # ── Admin: get all submissions for an assessment ──────────
 class AssessmentSubmissionsView(APIView):
