@@ -206,7 +206,9 @@ class SubmitAssessmentView(APIView):
             answers = json.loads(answers)
 
         correct = 0
-        total = 0
+
+        # total questions assigned to student
+        total = len(sa.questions_order)
         breakdown = []
         has_image_upload = False
 
@@ -218,7 +220,7 @@ class SubmitAssessmentView(APIView):
 
             student_ans = StudentAnswer(student_assessment=sa, question=q)
             is_correct = None
-            total += 1
+            
 
             if sa.assessment.answer_type == 'mcq':
                 choice_id = ans_data.get('choice_id')
