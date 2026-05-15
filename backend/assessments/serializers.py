@@ -59,3 +59,7 @@ class StudentAnswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentAnswer
         fields = '__all__'
+    def get_uploaded_image(self, obj):
+        if obj.uploaded_image:
+            return obj.uploaded_image.url
+        return None
