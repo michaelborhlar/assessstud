@@ -258,10 +258,25 @@ class SubmitAssessmentView(APIView):
             student_ans.marks_awarded = 1 if is_correct else 0
             student_ans.save()
 
+            your_answer = ''
+
+            if sa.assessment.answer_type == 'mcq':
+                choice_id = ans_data.get('choice_id')
+
+                if choice_id:
+                    try:
+                        selected_choice = QuestionChoice.objects.get(id=choice_id)
+                        your_answer = selected_choice.text
+                    except QuestionChoice.DoesNotExist:
+                        your_answer = ''
+
+            elif sa.assessment.answer_type in ['typed', 'typed_with_image']:
+                your_answer = ans_data.get('text', '')
+
             breakdown.append({
                 'question_id': q.id,
                 'question_text': q.text,
-                'your_answer': ans_data.get('text', '') or str(ans_data.get('choice_id', '')),
+                'your_answer': your_answer,
                 'correct_answer': q.correct_text_answer if sa.assessment.answer_type == 'typed' else None,
                 'solution': q.solution_description,
                 'is_correct': is_correct,
