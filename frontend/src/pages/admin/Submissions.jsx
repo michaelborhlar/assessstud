@@ -34,7 +34,13 @@ export default function Submissions() {
             </div>
             {s.answers.map(a => (
               <div key={a.id} style={{ borderTop:'1px solid #f0f0f0', paddingTop:10, marginTop:10 }}>
-                <p style={{ fontSize:13, color:'#555', marginBottom:4 }}>Q{a.question}: {a.typed_answer || (a.selected_choice ? `Selected choice ${a.selected_choice}` : '—')}</p>
+                <p style={{ fontSize:13, color:'#555', marginBottom:4 }}><p style={{ fontSize:13, color:'#555', marginBottom:4 }}>
+        Q{a.question}: {
+          a.typed_answer ||
+          a.selected_choice_text ||
+          '—'
+        }
+      </p></p>
                 {a.uploaded_image && <a href={a.uploaded_image} target="_blank" rel="noreferrer" style={{ fontSize:12, color:'#667eea' }}>View uploaded image</a>}
                 {!a.reviewed && (
                   <div style={{ display:'flex', gap:8, marginTop:8 }}>
