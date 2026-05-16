@@ -187,6 +187,124 @@ export default function TakeAssessment() {
             </p>
           )}
 
+          {/* ANSWER BREAKDOWN */}
+{result.show_results &&
+ result.breakdown &&
+ result.breakdown.length > 0 && (
+
+  <div style={{ marginTop:'1.5rem', textAlign:'left' }}>
+
+    <h3 style={{
+      fontSize:18,
+      fontWeight:700,
+      marginBottom:14,
+      color:'#333'
+    }}>
+      Answer Review
+    </h3>
+
+    {result.breakdown.map((item, i) => (
+
+      <div
+        key={i}
+        style={{
+          background:'#f9f9ff',
+          borderRadius:12,
+          padding:'1rem',
+          marginBottom:12,
+          borderLeft:`4px solid ${
+            item.is_correct === true
+              ? '#27ae60'
+              : item.is_correct === false
+                ? '#e74c3c'
+                : '#f39c12'
+          }`
+        }}
+      >
+
+        <div style={{
+          display:'flex',
+          justifyContent:'space-between',
+          marginBottom:8
+        }}>
+
+          <strong style={{ color:'#333' }}>
+            Q{i + 1}. {item.question_text}
+          </strong>
+
+          <span style={{
+            fontWeight:700,
+            color:
+              item.is_correct === true
+                ? '#27ae60'
+                : item.is_correct === false
+                  ? '#e74c3c'
+                  : '#f39c12'
+          }}>
+            {
+              item.is_correct === true
+                ? '✓ Correct'
+                : item.is_correct === false
+                  ? '✗ Wrong'
+                  : 'Pending Review'
+            }
+          </span>
+
+        </div>
+
+        <p style={{
+          fontSize:14,
+          marginBottom:6,
+          color:'#555'
+        }}>
+          <strong>Your Answer:</strong> {item.your_answer || '—'}
+        </p>
+
+        {item.correct_answer && (
+          <p style={{
+            fontSize:14,
+            marginBottom:6,
+            color:'#27ae60'
+          }}>
+            <strong>Correct Answer:</strong> {item.correct_answer}
+          </p>
+        )}
+
+        {result.show_solution && item.solution && (
+          <div style={{
+            marginTop:10,
+            padding:'10px',
+            background:'#eef3ff',
+            borderRadius:8
+          }}>
+
+            <p style={{
+              fontSize:13,
+              fontWeight:700,
+              color:'#667eea',
+              marginBottom:4
+            }}>
+              Explanation
+            </p>
+
+            <p style={{
+              fontSize:13,
+              color:'#555'
+            }}>
+              {item.solution}
+            </p>
+
+          </div>
+        )}
+
+      </div>
+
+    ))}
+
+  </div>
+
+)}
+
         </div>
 
         <button
