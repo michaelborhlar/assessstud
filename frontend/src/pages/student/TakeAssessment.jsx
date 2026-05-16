@@ -15,7 +15,7 @@ export default function TakeAssessment() {
   const [answerType, setAnswerType] = useState('mcq')
   const [assessmentInfo, setAssessmentInfo] = useState(null)
 
-  // NEW
+  // LOADING STATE
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
@@ -72,9 +72,9 @@ export default function TakeAssessment() {
     // PREVENT DOUBLE SUBMIT
     if (submitting) return
 
-    setSubmitting(true)
-
     try {
+
+      setSubmitting(true)
 
       const fd = new FormData()
 
@@ -88,9 +88,17 @@ export default function TakeAssessment() {
 
       })
 
+      // IMPORTANT FOR ANDROID BROWSERS
+      await new Promise(resolve => setTimeout(resolve, 100))
+
       const r = await api.post(
         `/assessments/session/${session}/submit/`,
-        fd
+        fd,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }
       )
 
       setResult(r.data)
@@ -336,7 +344,7 @@ export default function TakeAssessment() {
 
               <div
                 key={ch.id}
-                onClick={() => setAnswer(q.id, { choice_id: ch.id })}
+                onClick={() => !submitting && setAnswer(q.id, { choice_id: ch.id })}
                 style={{
                   padding:'10px 14px',
                   borderRadius:8,
@@ -346,11 +354,12 @@ export default function TakeAssessment() {
                       : '#e0e0e0'
                   }`,
                   marginBottom:8,
-                  cursor:'pointer',
+                  cursor: submitting ? 'not-allowed' : 'pointer',
                   background:
                     answers[q.id]?.choice_id === ch.id
                       ? '#f0f0ff'
-                      : '#fff'
+                      : '#fff',
+                  opacity: submitting ? 0.7 : 1
                 }}
               >
                 <span style={{
@@ -372,6 +381,7 @@ export default function TakeAssessment() {
 
               <textarea
                 rows={4}
+                disabled={submitting}
                 placeholder="Type your answer here..."
                 style={{
                   width:'100%',
@@ -379,7 +389,8 @@ export default function TakeAssessment() {
                   borderRadius:8,
                   border:'1.5px solid #e0e0e0',
                   fontSize:14,
-                  resize:'vertical'
+                  resize:'vertical',
+                  opacity: submitting ? 0.7 : 1
                 }}
                 value={answers[q.id]?.text || ''}
                 onChange={e =>
@@ -407,6 +418,7 @@ export default function TakeAssessment() {
                 <input
                   type="file"
                   accept="image/*"
+                  disabled={submitting}
                   onChange={e =>
                     setAnswer(q.id, {
                       image: e.target.files[0]
