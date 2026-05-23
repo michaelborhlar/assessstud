@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     # admin
     path('questions/', views.QuestionListCreateView.as_view()),
+    path('questions/bulk-upload/', views.BulkUploadQuestionsView.as_view()),
     path('', views.AssessmentListCreateView.as_view()),
     path('<int:assessment_id>/submissions/', views.AssessmentSubmissionsView.as_view()),
     path('answers/<int:answer_id>/review/', views.AdminReviewAnswerView.as_view()),
