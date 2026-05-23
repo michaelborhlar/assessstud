@@ -46,6 +46,62 @@ class QuestionListCreateView(APIView):
             )
         return Response(QuestionSerializer(q, context={'request': request}).data, status=201)
 
+class BulkUploadQuestionsView(APIView):
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request):
+        if not is_admin(request.user):
+            return Response({'error': 'Forbidden'}, status=403)
+
+        file = request.FILES.get('file')
+        if not file:
+            return Response({'error': 'No file uploaded'}, status=400)
+
+        if not file.name.endswith('.docx'):
+            return Response({'error': 'File must be a .docx Word document'}, status=400)
+
+        try:
+            questions = parse_bulk_questions(file)
+        except Exception as e:
+            return Response({'error': f'Failed to parse file: {str(e)}'}, status=400)
+
+        if not questions:
+            return Response({'error': 'No questions found in file. Check your format.'}, status=400)
+
+        created = []
+        errors = []
+
+        for i, q in enumerate(questions):
+            try:
+                question = QuestionBank.objects.create(
+                    subject=q.get('subject', 'other'),
+                    topic=q.get('topic', ''),
+                    text=q.get('text', ''),
+                    correct_text_answer=q.get('correct_text_answer', ''),
+                    solution_description=q.get('solution', ''),
+                    created_by=request.user
+                )
+                choices = q.get('choices', [])
+                for c in choices:
+                    QuestionChoice.objects.create(
+                        question=question,
+                        label=c['label'],
+                        text=c['text'],
+                        is_correct=c['is_correct']
+                    )
+                created.append({
+                    'id': question.id,
+                    'text': question.text[:60]
+                })
+            except Exception as e:
+                errors.append(f'Question {i+1}: {str(e)}')
+
+        return Response({
+            'created': len(created),
+            'errors': errors,
+            'questions': created
+        }, status=201)
+
 class QuestionDeleteView(APIView):
     def delete(self, request, question_id):
         if not is_admin(request.user):
