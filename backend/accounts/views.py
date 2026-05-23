@@ -92,3 +92,58 @@ class StatsView(APIView):
             'total_admins': total_admins,
             'per_class': per_class
         })
+class VisitorLogView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role != 'admin':
+            return Response({'error': 'Forbidden'}, status=403)
+
+        from .models import VisitorLog
+        from django.db.models import Count
+        from django.utils.timezone import now, timedelta
+
+        # filters
+        days = int(request.query_params.get('days', 7))
+        since = now() - timedelta(days=days)
+
+        logs = VisitorLog.objects.filter(visited_at__gte=since)
+
+        # total visits
+        total = logs.count()
+
+        # unique IPs
+        unique = logs.values('ip_address').distinct().count()
+
+        # visits per day
+        from django.db.models.functions import TruncDate
+        per_day = list(
+            logs.annotate(date=TruncDate('visited_at'))
+            .values('date')
+            .annotate(count=Count('id'))
+            .order_by('date')
+        )
+
+        # top pages
+        top_pages = list(
+            logs.values('path')
+            .annotate(count=Count('id'))
+            .order_by('-count')[:10]
+        )
+
+        # recent visits
+        recent = list(
+            logs.values(
+                'ip_address', 'path',
+                'visited_at', 'user__first_name',
+                'user__last_name', 'user__username'
+            ).order_by('-visited_at')[:50]
+        )
+
+        return Response({
+            'total_visits': total,
+            'unique_visitors': unique,
+            'per_day': per_day,
+            'top_pages': top_pages,
+            'recent': recent,
+        })
