@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import api from '../../api'
+import { useAuth } from '../../context/AuthContext'
 
 const SUBJECTS = ['math','F/math','eng','sci','bio','phy','chem','geo','hist','other']
 
 export default function AddQuestion() {
+  const { logout } = useAuth()
+  const nav = useNavigate()
+
   const [form, setForm] = useState({
     subject:'math',
     topic:'',
@@ -108,8 +112,18 @@ export default function AddQuestion() {
     }
   }
 
+  const navLinks = [
+    ['Dashboard',     '/admin/dashboard'],
+    ['Add Question',  '/admin/questions'],
+    ['New Assessment','/admin/create'],
+    ['Content',       '/admin/content'],
+    ['Users',         '/admin/users'],
+  ]
+
   return (
     <div style={{ minHeight:'100vh', background:'#f5f5f5' }}>
+
+      {/* ── HEADER ── */}
       <header style={{
         background:'#1a1a2e',
         padding:'14px 2rem',
@@ -117,24 +131,49 @@ export default function AddQuestion() {
         justifyContent:'space-between',
         alignItems:'center'
       }}>
-        <span style={{
-          fontSize:20,
-          fontWeight:700,
-          color:'#fff'
-        }}>
-          AssessStud Admin
+        <span style={{ fontSize:20, fontWeight:700, color:'#fff' }}>
+          AssessStud
+          <span style={{
+            fontSize:12,
+            background:'#667eea',
+            padding:'2px 8px',
+            borderRadius:99,
+            marginLeft:8
+          }}>
+            Admin
+          </span>
         </span>
 
-        <Link
-          to="/admin/dashboard"
-          style={{
-            color:'#ccc',
-            textDecoration:'none',
-            fontSize:13
-          }}
-        >
-          ← Dashboard
-        </Link>
+        <nav style={{ display:'flex', gap:16, alignItems:'center' }}>
+          {navLinks.map(([label, path]) => (
+            <Link
+              key={path}
+              to={path}
+              style={{
+                color: path === '/admin/questions' ? '#fff' : '#ccc',
+                textDecoration:'none',
+                fontSize:13,
+                fontWeight: path === '/admin/questions' ? 700 : 500
+              }}
+            >
+              {label}
+            </Link>
+          ))}
+          <button
+            onClick={() => { logout(); nav('/admin/login') }}
+            style={{
+              background:'none',
+              border:'1px solid #555',
+              color:'#ccc',
+              padding:'5px 12px',
+              borderRadius:8,
+              cursor:'pointer',
+              fontSize:12
+            }}
+          >
+            Logout
+          </button>
+        </nav>
       </header>
 
       <main style={{
@@ -142,6 +181,41 @@ export default function AddQuestion() {
         margin:'2rem auto',
         padding:'0 1rem'
       }}>
+
+        {/* ── BULK UPLOAD BANNER ── */}
+        <div style={{
+          background:'linear-gradient(135deg,#667eea,#764ba2)',
+          borderRadius:10,
+          padding:'12px 16px',
+          marginBottom:20,
+          display:'flex',
+          justifyContent:'space-between',
+          alignItems:'center'
+        }}>
+          <div>
+            <p style={{ color:'#fff', fontWeight:600, fontSize:14 }}>
+              Have many questions?
+            </p>
+            <p style={{ color:'rgba(255,255,255,0.8)', fontSize:12 }}>
+              Upload a Word or ZIP file with 100+ questions at once
+            </p>
+          </div>
+          <Link
+            to="/admin/bulk-upload"
+            style={{
+              padding:'8px 16px',
+              background:'#fff',
+              color:'#667eea',
+              borderRadius:8,
+              textDecoration:'none',
+              fontWeight:600,
+              fontSize:13,
+              whiteSpace:'nowrap'
+            }}
+          >
+            Bulk Upload →
+          </Link>
+        </div>
 
         <h2 style={{
           fontSize:20,
