@@ -14,6 +14,8 @@ import Submissions      from './pages/admin/Submissions'
 import UploadContent    from './pages/admin/UploadContent'
 import ManageUsers      from './pages/admin/ManageUsers'
 import { useAuth }      from './context/AuthContext'
+import BulkUploadQuestions from './pages/admin/BulkUploadQuestions'
+
 
 function PrivateRoute({ children, role }) {
   const { user } = useAuth()
@@ -41,6 +43,7 @@ export default function App() {
         <Route path="/admin/dashboard"     element={<PrivateRoute role="admin"><AdminDashboard /></PrivateRoute>} />
         <Route path="/admin/create"        element={<PrivateRoute role="admin"><CreateAssessment /></PrivateRoute>} />
         <Route path="/admin/questions"     element={<PrivateRoute role="admin"><AddQuestion /></PrivateRoute>} />
+        <Route path="/admin/bulk-upload" element={<PrivateRoute role="admin"><BulkUploadQuestions /></PrivateRoute>} />
         <Route path="/admin/submissions/:id" element={<PrivateRoute role="admin"><Submissions /></PrivateRoute>} />
         <Route path="/admin/content"       element={<PrivateRoute role="admin"><UploadContent /></PrivateRoute>} />
         <Route path="/admin/users"         element={<PrivateRoute role="admin"><ManageUsers /></PrivateRoute>} />
