@@ -39,3 +39,21 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.username
+
+class VisitorLog(models.Model):
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    path       = models.CharField(max_length=500)
+    user_agent = models.CharField(max_length=500, blank=True)
+    user       = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='visits'
+    )
+    visited_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-visited_at']
+
+    def __str__(self):
+        return f"{self.ip_address} → {self.path} at {self.visited_at}"
