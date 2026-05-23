@@ -23,6 +23,7 @@ export default function AdminDashboard() {
     ['New Assessment','/admin/create'],
     ['Content','/admin/content'],
     ['Users','/admin/users'],
+    ['Visitors',      '/admin/visitors'],
   ]
 
   return (
