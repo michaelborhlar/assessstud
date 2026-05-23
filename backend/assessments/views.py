@@ -8,6 +8,7 @@ from .models import QuestionBank, QuestionChoice, Assessment, StudentAssessment,
 from .serializers import (QuestionSerializer, QuestionStudentSerializer,
                            AssessmentSerializer, AssessmentListSerializer,
                            StudentAssessmentSerializer, StudentAnswerSerializer)
+from .parsers import parse_bulk_questions
 
 def is_admin(user):
     return user.role == 'admin'
