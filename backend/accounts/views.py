@@ -92,6 +92,7 @@ class StatsView(APIView):
             'total_admins': total_admins,
             'per_class': per_class
         })
+      
 class VisitorLogView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -99,51 +100,66 @@ class VisitorLogView(APIView):
         if request.user.role != 'admin':
             return Response({'error': 'Forbidden'}, status=403)
 
-        from .models import VisitorLog
-        from django.db.models import Count
-        from django.utils.timezone import now, timedelta
+        try:
+            from .models import VisitorLog
+            from django.db.models import Count
+            from django.utils.timezone import now, timedelta
+            from django.db.models.functions import TruncDate
 
-        # filters
-        days = int(request.query_params.get('days', 7))
-        since = now() - timedelta(days=days)
+            days = int(request.query_params.get('days', 7))
+            since = now() - timedelta(days=days)
+            logs = VisitorLog.objects.filter(visited_at__gte=since)
 
-        logs = VisitorLog.objects.filter(visited_at__gte=since)
+            total = logs.count()
+            unique = logs.values('ip_address').distinct().count()
 
-        # total visits
-        total = logs.count()
+            per_day_qs = (
+                logs.annotate(date=TruncDate('visited_at'))
+                .values('date')
+                .annotate(count=Count('id'))
+                .order_by('date')
+            )
+            per_day = [
+                {
+                    'date': str(item['date']) if item['date'] else None,
+                    'count': item['count']
+                }
+                for item in per_day_qs
+            ]
 
-        # unique IPs
-        unique = logs.values('ip_address').distinct().count()
+            top_pages = list(
+                logs.values('path')
+                .annotate(count=Count('id'))
+                .order_by('-count')[:10]
+            )
 
-        # visits per day
-        from django.db.models.functions import TruncDate
-        per_day = list(
-            logs.annotate(date=TruncDate('visited_at'))
-            .values('date')
-            .annotate(count=Count('id'))
-            .order_by('date')
-        )
+            recent_qs = (
+                logs.select_related('user')
+                .order_by('-visited_at')[:50]
+            )
+            recent = [
+                {
+                    'ip_address': v.ip_address,
+                    'path': v.path,
+                    'visited_at': v.visited_at.isoformat() if v.visited_at else None,
+                    'user__first_name': v.user.first_name if v.user else None,
+                    'user__last_name': v.user.last_name if v.user else None,
+                    'user__username': v.user.username if v.user else None,
+                }
+                for v in recent_qs
+            ]
 
-        # top pages
-        top_pages = list(
-            logs.values('path')
-            .annotate(count=Count('id'))
-            .order_by('-count')[:10]
-        )
+            return Response({
+                'total_visits': total,
+                'unique_visitors': unique,
+                'per_day': per_day,
+                'top_pages': top_pages,
+                'recent': recent,
+            })
 
-        # recent visits
-        recent = list(
-            logs.values(
-                'ip_address', 'path',
-                'visited_at', 'user__first_name',
-                'user__last_name', 'user__username'
-            ).order_by('-visited_at')[:50]
-        )
-
-        return Response({
-            'total_visits': total,
-            'unique_visitors': unique,
-            'per_day': per_day,
-            'top_pages': top_pages,
-            'recent': recent,
-        })
+        except Exception as e:
+            import traceback
+            return Response({
+                'error': str(e),
+                'detail': traceback.format_exc()
+            }, status=500)
