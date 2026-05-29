@@ -179,27 +179,7 @@ class AssessmentDeleteView(APIView):
         return Response({'message': 'Assessment deleted successfully'})
 
 # ── Student: see available assessments ────────────────────
-class StudentAssessmentListView(APIView):
-    def get(self, request):
-        student = request.user
-        if not student.student_class:
-            return Response([])
-        assessments = Assessment.objects.filter(
-            target_class=student.student_class,
-            is_active=True
-        ).order_by('-created_at')
-        result = []
-        for a in assessments:
-            sa, _ = StudentAssessment.objects.get_or_create(
-                student=student, assessment=a
-            )
-            result.append({
-                'assessment': AssessmentListSerializer(a).data,
-                'is_submitted': sa.is_submitted,
-                'score': sa.score,
-                'started_at': sa.started_at,
-            })
-        return Response(result)
+
 
 # ── Student: start & get questions ────────────────────────
 class StartAssessmentView(APIView):
@@ -426,39 +406,52 @@ class AssessmentSubmissionsView(APIView):
 class StudentOverallScoreView(APIView):
     def get(self, request):
         student = request.user
+
         if not student.student_class:
             return Response({'error': 'No class assigned'}, status=400)
 
-        # get all active assessments for student's class
+        now = timezone.now()
+
         all_assessments = Assessment.objects.filter(
             target_class=student.student_class,
             is_active=True
         ).order_by('created_at')
 
         total_assessments = all_assessments.count()
+
         if total_assessments == 0:
             return Response({
                 'total_assessments': 0,
                 'submitted': 0,
+                'pending': 0,
                 'missed': 0,
                 'overall_score': 0,
                 'breakdown': []
             })
 
         breakdown = []
+
         total_score = 0
+
         submitted_count = 0
+        pending_count = 0
         missed_count = 0
 
         for a in all_assessments:
+
             try:
                 sa = StudentAssessment.objects.get(
-                    student=student, assessment=a
+                    student=student,
+                    assessment=a
                 )
+
                 if sa.is_submitted:
+
                     score = sa.score if sa.score is not None else 0
+
                     submitted_count += 1
                     total_score += score
+
                     breakdown.append({
                         'id': a.id,
                         'title': a.title,
@@ -468,10 +461,51 @@ class StudentOverallScoreView(APIView):
                         'status': 'submitted',
                         'submitted_at': sa.submitted_at,
                     })
+
                 else:
-                    # started but not submitted = missed = 0
+
+                    is_expired = (
+                        a.end_datetime and now > a.end_datetime
+                    )
+
+                    if is_expired:
+
+                        missed_count += 1
+
+                        breakdown.append({
+                            'id': a.id,
+                            'title': a.title,
+                            'type': a.type,
+                            'subject': a.subject,
+                            'score': 0,
+                            'status': 'missed',
+                            'submitted_at': None,
+                        })
+
+                    else:
+
+                        pending_count += 1
+
+                        breakdown.append({
+                            'id': a.id,
+                            'title': a.title,
+                            'type': a.type,
+                            'subject': a.subject,
+                            'score': None,
+                            'status': 'pending',
+                            'submitted_at': None,
+                        })
+
+            except StudentAssessment.DoesNotExist:
+
+                is_expired = (
+                    a.end_datetime and now > a.end_datetime
+                )
+
+                if is_expired:
+
                     missed_count += 1
-                    total_score += 0
+
                     breakdown.append({
                         'id': a.id,
                         'title': a.title,
@@ -481,50 +515,79 @@ class StudentOverallScoreView(APIView):
                         'status': 'missed',
                         'submitted_at': None,
                     })
-            except StudentAssessment.DoesNotExist:
-                # never started = missed = 0
-                missed_count += 1
-                total_score += 0
-                breakdown.append({
-                    'id': a.id,
-                    'title': a.title,
-                    'type': a.type,
-                    'subject': a.subject,
-                    'score': 0,
-                    'status': 'not_started',
-                    'submitted_at': None,
-                })
 
-        overall = round(total_score / total_assessments, 1)
+                else:
 
-        # breakdown by type
+                    pending_count += 1
+
+                    breakdown.append({
+                        'id': a.id,
+                        'title': a.title,
+                        'type': a.type,
+                        'subject': a.subject,
+                        'score': None,
+                        'status': 'pending',
+                        'submitted_at': None,
+                    })
+
+        overall_score = round(
+            total_score / total_assessments,
+            1
+        )
+
         type_stats = {}
+
         for item in breakdown:
+
             t = item['type']
+
             if t not in type_stats:
-                type_stats[t] = {'total': 0, 'score_sum': 0, 'submitted': 0, 'missed': 0}
+                type_stats[t] = {
+                    'total': 0,
+                    'score_sum': 0,
+                    'submitted': 0,
+                    'pending': 0,
+                    'missed': 0
+                }
+
             type_stats[t]['total'] += 1
-            type_stats[t]['score_sum'] += item['score']
+
+            if item['score'] is not None:
+                type_stats[t]['score_sum'] += item['score']
+
             if item['status'] == 'submitted':
                 type_stats[t]['submitted'] += 1
-            else:
+
+            elif item['status'] == 'pending':
+                type_stats[t]['pending'] += 1
+
+            elif item['status'] == 'missed':
                 type_stats[t]['missed'] += 1
 
         type_summary = []
+
         for t, stats in type_stats.items():
+
+            average = round(
+                stats['score_sum'] / stats['total'],
+                1
+            )
+
             type_summary.append({
                 'type': t,
                 'total': stats['total'],
                 'submitted': stats['submitted'],
+                'pending': stats['pending'],
                 'missed': stats['missed'],
-                'average': round(stats['score_sum'] / stats['total'], 1)
+                'average': average,
             })
 
         return Response({
             'total_assessments': total_assessments,
             'submitted': submitted_count,
+            'pending': pending_count,
             'missed': missed_count,
-            'overall_score': overall,
+            'overall_score': overall_score,
             'type_summary': type_summary,
             'breakdown': breakdown,
         })
