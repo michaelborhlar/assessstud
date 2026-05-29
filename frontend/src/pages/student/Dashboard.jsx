@@ -5,9 +5,8 @@ import { useAuth } from '../../context/AuthContext'
 
 export default function StudentDashboard() {
   const { user, logout } = useAuth()
-  const [items, setItems] = useState([])
+  const [items, setItems]     = useState([])
   const [overall, setOverall] = useState(null)
-  const [showBreakdown, setShowBreakdown] = useState(false)
   const nav = useNavigate()
 
   useEffect(() => {
@@ -15,269 +14,275 @@ export default function StudentDashboard() {
     api.get('/assessments/my/overall/').then(r => setOverall(r.data)).catch(() => {})
   }, [])
 
-  const badges  = { test:'#e74c3c', assignment:'#f39c12', assessment:'#27ae60' }
-  const labels  = { test:'Test', assignment:'Weekly Assignment', assessment:'Weekly Assessment' }
-  const typeColors = { test:'#e74c3c', assignment:'#f39c12', assessment:'#27ae60' }
-  const typeLabels = { test:'Tests', assignment:'Assignments', assessment:'Assessments' }
-
   function doLogout() { logout(); nav('/login') }
 
-  function scoreColor(score) {
-    if (score >= 70) return '#27ae60'
-    if (score >= 50) return '#f39c12'
-    return '#e74c3c'
+  const typeColors = { test:'#534AB7', assignment:'#BA7517', assessment:'#1D9E75' }
+  const typeBg     = { test:'#EEEDFE', assignment:'#FFF3E0', assessment:'#E1F5EE' }
+  const typeLabels = { test:'Test', assignment:'Assignment', assessment:'Assessment' }
+
+  function scoreColor(s) {
+    if (s >= 70) return '#1D9E75'
+    if (s >= 50) return '#BA7517'
+    return '#E24B4A'
+  }
+  function scoreBg(s) {
+    if (s >= 70) return '#EAF3DE'
+    if (s >= 50) return '#FAEEDA'
+    return '#FCEBEB'
   }
 
-  function scoreEmoji(score) {
-    if (score >= 70) return '🎉'
-    if (score >= 50) return '👍'
-    return '📚'
-  }
+  const initials = user
+    ? `${user.first_name?.[0] || ''}${user.last_name?.[0] || ''}`.toUpperCase()
+    : 'ST'
 
-  // circular progress helper
-  function CircleProgress({ score, size = 90 }) {
-    const r = (size / 2) - 8
-    const circ = 2 * Math.PI * r
-    const offset = circ - (score / 100) * circ
-    const color = scoreColor(score)
-    return (
-      <svg width={size} height={size}>
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#f0f0f0" strokeWidth={7} />
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={7}
-          strokeDasharray={circ} strokeDashoffset={offset}
-          strokeLinecap="round"
-          style={{ transform:'rotate(-90deg)', transformOrigin:'50% 50%', transition:'stroke-dashoffset 1s ease' }} />
-        <text x="50%" y="50%" textAnchor="middle" dy="0.35em"
-          style={{ fontSize: size * 0.2, fontWeight:700, fill: color, fontFamily:'sans-serif' }}>
-          {score}%
-        </text>
-      </svg>
-    )
-  }
+  const today = new Date().toLocaleDateString('en-GB', {
+    weekday:'long', day:'numeric', month:'long'
+  })
+
+  const pending   = items.filter(i => !i.is_submitted)
+  const submitted = items.filter(i => i.is_submitted)
+  const missed    = overall ? overall.missed : 0
+  const total     = overall ? overall.total_assessments : 0
+  const overallScore = overall ? overall.overall_score : 0
 
   return (
-    <div style={s.page}>
-      <header style={s.header}>
-        <span style={s.logo}>AssessStud</span>
-        <nav style={{ display:'flex', gap:20 }}>
-          <Link to="/dashboard" style={s.navLink}>Dashboard</Link>
-          <Link to="/learn" style={s.navLink}>Learn</Link>
-          <button onClick={doLogout} style={s.logoutBtn}>Logout</button>
+    <div style={{ minHeight:'100vh', background:'var(--color-background-tertiary, #f0f4ff)', fontFamily:'var(--font-sans)' }}>
+
+      {/* Top bar */}
+      <header style={{ background:'#fff', borderBottom:'0.5px solid #e5e7eb', padding:'0 1.5rem', height:52, display:'flex', alignItems:'center', gap:0 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:8, marginRight:'auto' }}>
+          <div style={{ width:8, height:8, borderRadius:'50%', background:'#534AB7' }} />
+          <span style={{ fontSize:17, fontWeight:500, color:'#111' }}>AssessStud</span>
+        </div>
+        <nav style={{ display:'flex', height:52 }}>
+          {[['Dashboard','/dashboard'],['Learn','/learn']].map(([label, path]) => (
+            <Link key={path} to={path} style={{
+              fontSize:13, color: path === '/dashboard' ? '#111' : '#666',
+              textDecoration:'none', padding:'0 14px', height:52,
+              display:'inline-flex', alignItems:'center',
+              borderBottom: path === '/dashboard' ? '2px solid #534AB7' : '2px solid transparent',
+              fontWeight: path === '/dashboard' ? 500 : 400,
+            }}>
+              {label}
+            </Link>
+          ))}
         </nav>
+        <button onClick={doLogout} style={{ marginLeft:12, fontSize:12, color:'#E24B4A', background:'none', border:'0.5px solid #e0e0e0', padding:'5px 12px', borderRadius:8, cursor:'pointer' }}>
+          Logout
+        </button>
       </header>
 
-      <main style={s.main}>
-        {/* Welcome banner — unchanged */}
-        <div style={s.welcome}>
-          <h1 style={{ fontSize:24, fontWeight:700 }}>Welcome, {user.first_name}! 👋</h1>
-          <p style={{ color:'rgba(255,255,255,0.8)', marginTop:4 }}>Class: {user.student_class_name}</p>
+      <div style={{ maxWidth:960, margin:'0 auto', padding:'1.5rem 1rem' }}>
+
+        {/* Hero */}
+        <div style={card}>
+          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+            <div style={{ width:48, height:48, borderRadius:'50%', background:'#EEEDFE', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, fontWeight:500, color:'#534AB7', flexShrink:0 }}>
+              {initials}
+            </div>
+            <div>
+              <div style={{ fontSize:17, fontWeight:500, color:'#111' }}>
+                Good day, {user?.first_name}
+              </div>
+              <div style={{ fontSize:13, color:'#888', marginTop:2 }}>
+                {pending.length > 0 ? `You have ${pending.length} pending task${pending.length > 1 ? 's' : ''}` : 'All caught up!'}
+              </div>
+            </div>
+            <div style={{ marginLeft:'auto', textAlign:'right' }}>
+              <div style={{ fontSize:12, color:'#aaa' }}>{today}</div>
+              <div style={{ display:'inline-flex', alignItems:'center', gap:4, fontSize:12, fontWeight:500, background:'#f4f4f4', color:'#555', padding:'3px 10px', borderRadius:99, marginTop:4 }}>
+                {user?.student_class_name}
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* ── OVERALL SCORE SECTION ── */}
-        {overall && overall.total_assessments > 0 && (
-          <div style={scoreSection}>
-
-            {/* Top row */}
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20, flexWrap:'wrap', gap:12 }}>
-              <div>
-                <h2 style={{ fontSize:17, fontWeight:700, color:'#1a1a2e', marginBottom:2 }}>
-                  {scoreEmoji(overall.overall_score)} Overall Performance
-                </h2>
-                <p style={{ fontSize:13, color:'#888' }}>
-                  All assessments from week 1 · {user.student_class_name}
-                </p>
+        {/* Stat cards */}
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10, margin:'10px 0' }}>
+          {[
+            { label:'Overall score', val:`${overallScore}%`, sub:'All assessments', color:'#534AB7', pct: overallScore },
+            { label:'Submitted', val: submitted.length, sub:`Out of ${total} total`, color:'#1D9E75', pct: total ? submitted.length/total*100 : 0 },
+            { label:'Missed', val: missed, sub:'Counted as 0%', color:'#E24B4A', pct: total ? missed/total*100 : 0 },
+            { label:'Pending', val: pending.length, sub:'To complete', color:'#BA7517', pct: total ? pending.length/total*100 : 0 },
+          ].map((s, i) => (
+            <div key={i} style={card}>
+              <div style={{ fontSize:12, color:'#888', marginBottom:6 }}>{s.label}</div>
+              <div style={{ fontSize:24, fontWeight:500, color:s.color }}>{s.val}</div>
+              <div style={{ fontSize:11, color:'#aaa', marginTop:3 }}>{s.sub}</div>
+              <div style={{ height:4, background:'#f0f0f0', borderRadius:99, marginTop:8, overflow:'hidden' }}>
+                <div style={{ height:4, borderRadius:99, background:s.color, width:`${Math.min(100, s.pct)}%`, transition:'width 1s ease' }} />
               </div>
-              <button onClick={() => setShowBreakdown(!showBreakdown)}
-                style={{ fontSize:12, color:'#667eea', background:'#f0f4ff', border:'none', padding:'6px 14px', borderRadius:99, cursor:'pointer', fontWeight:600 }}>
-                {showBreakdown ? 'Hide details ↑' : 'View details ↓'}
-              </button>
-            </div>
-
-            {/* Main stats row */}
-            <div style={{ display:'grid', gridTemplateColumns:'auto 1fr', gap:24, alignItems:'center', marginBottom:20 }}>
-
-              {/* Circle */}
-              <div style={{ textAlign:'center' }}>
-                <CircleProgress score={overall.overall_score} size={100} />
-                <p style={{ fontSize:11, color:'#888', marginTop:4 }}>Overall Score</p>
-              </div>
-
-              {/* Stats */}
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
-                <div style={statBox('#EAF3DE','#3B6D11')}>
-                  <div style={{ fontSize:22, fontWeight:700 }}>{overall.submitted}</div>
-                  <div style={{ fontSize:11, marginTop:2 }}>Submitted</div>
-                </div>
-                <div style={statBox('#FAEEDA','#854F0B')}>
-                  <div style={{ fontSize:22, fontWeight:700 }}>{overall.missed}</div>
-                  <div style={{ fontSize:11, marginTop:2 }}>Missed (0%)</div>
-                </div>
-                <div style={statBox('#f0f4ff','#667eea')}>
-                  <div style={{ fontSize:22, fontWeight:700 }}>{overall.total_assessments}</div>
-                  <div style={{ fontSize:11, marginTop:2 }}>Total Posted</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Progress bar */}
-            <div style={{ marginBottom: showBreakdown ? 20 : 0 }}>
-              <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, color:'#888', marginBottom:6 }}>
-                <span>Your progress</span>
-                <span>{overall.overall_score}% / 100%</span>
-              </div>
-              <div style={{ height:10, background:'#f0f0f0', borderRadius:99, overflow:'hidden' }}>
-                <div style={{
-                  height:'100%', borderRadius:99,
-                  width:`${overall.overall_score}%`,
-                  background:`linear-gradient(90deg, ${scoreColor(overall.overall_score)}, ${scoreColor(overall.overall_score)}cc)`,
-                  transition:'width 1s ease'
-                }} />
-              </div>
-            </div>
-
-            {/* Type summary pills */}
-            {overall.type_summary && overall.type_summary.length > 0 && (
-              <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom: showBreakdown ? 20 : 0 }}>
-                {overall.type_summary.map(t => (
-                  <div key={t.type} style={{
-                    background:'#f9f9f9', borderRadius:10, padding:'8px 14px',
-                    border:`1.5px solid ${typeColors[t.type]}22`,
-                    display:'flex', alignItems:'center', gap:8
-                  }}>
-                    <div style={{ width:8, height:8, borderRadius:99, background:typeColors[t.type] }} />
-                    <div>
-                      <p style={{ fontSize:12, fontWeight:600, color:'#333' }}>{typeLabels[t.type]}</p>
-                      <p style={{ fontSize:11, color:'#888' }}>{t.average}% avg · {t.missed} missed</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Detailed breakdown */}
-            {showBreakdown && (
-              <div style={{ borderTop:'1px solid #f0f0f0', paddingTop:16 }}>
-                <p style={{ fontSize:13, fontWeight:600, color:'#555', marginBottom:10 }}>
-                  All Assessments Breakdown
-                </p>
-                <div style={{ display:'flex', flexDirection:'column', gap:8, maxHeight:300, overflowY:'auto' }}>
-                  {overall.breakdown.map((item, i) => (
-                    <div key={item.id} style={{
-                      display:'flex', alignItems:'center', gap:12,
-                      padding:'10px 12px', borderRadius:8,
-                      background: item.status === 'submitted' ? '#fafafa' : '#fff8f8',
-                      border:`1px solid ${item.status === 'submitted' ? '#eee' : '#fdecea'}`
-                    }}>
-                      <div style={{
-                        width:36, height:36, borderRadius:99,
-                        background: item.status === 'submitted' ? scoreColor(item.score) + '18' : '#fdecea',
-                        display:'flex', alignItems:'center', justifyContent:'center',
-                        fontSize:12, fontWeight:700,
-                        color: item.status === 'submitted' ? scoreColor(item.score) : '#e74c3c',
-                        flexShrink:0
-                      }}>
-                        {item.status === 'submitted' ? `${item.score}%` : '0%'}
-                      </div>
-                      <div style={{ flex:1, minWidth:0 }}>
-                        <p style={{ fontSize:13, fontWeight:500, color:'#333',
-                          overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                          {item.title}
-                        </p>
-                        <p style={{ fontSize:11, color:'#888' }}>
-                          {typeLabels[item.type]} · {item.subject}
-                        </p>
-                      </div>
-                      <div style={{ flexShrink:0, textAlign:'right' }}>
-                        {item.status === 'submitted' ? (
-                          <span style={{ fontSize:11, color:'#27ae60', fontWeight:600,
-                            background:'#EAF3DE', padding:'2px 8px', borderRadius:99 }}>
-                            ✓ Done
-                          </span>
-                        ) : item.status === 'missed' ? (
-                          <span style={{ fontSize:11, color:'#e74c3c', fontWeight:600,
-                            background:'#fdecea', padding:'2px 8px', borderRadius:99 }}>
-                            Missed
-                          </span>
-                        ) : (
-                          <span style={{ fontSize:11, color:'#f39c12', fontWeight:600,
-                            background:'#FAEEDA', padding:'2px 8px', borderRadius:99 }}>
-                            Pending
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── PENDING TASKS — unchanged ── */}
-        <h2 style={s.sectionTitle}>Your Pending Tasks</h2>
-        {items.length === 0 && <p style={{ color:'#888' }}>No assessments assigned yet.</p>}
-        <div style={s.grid}>
-          {items.map(({ assessment: a, is_submitted, score }) => (
-            <div key={a.id} style={s.card}>
-              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
-                <span style={{ ...s.badge, background: badges[a.type] }}>{labels[a.type]}</span>
-                {is_submitted && <span style={{ ...s.badge, background:'#27ae60' }}>✓ Submitted</span>}
-              </div>
-              <h3 style={s.cardTitle}>{a.title}</h3>
-              <p style={s.cardSub}>{a.subject}</p>
-              {a.end_datetime && (
-                <p style={s.deadline}>⏰ Deadline: {new Date(a.end_datetime).toLocaleString()}</p>
-              )}
-              {a.start_datetime && (
-                <p style={s.deadline}>📅 Opens: {new Date(a.start_datetime).toLocaleString()}</p>
-              )}
-              {score !== null && is_submitted && (
-                <p style={{ color:'#27ae60', fontWeight:600, marginTop:6 }}>Score: {score}%</p>
-              )}
-              {!is_submitted && (
-                <button style={s.startBtn} onClick={() => nav(`/assessment/${a.id}`)}>
-                  Start →
-                </button>
-              )}
             </div>
           ))}
         </div>
-      </main>
+
+        {/* Two columns */}
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:10 }}>
+
+          {/* Pending tasks */}
+          <div style={{ ...card, padding:0, overflow:'hidden' }}>
+            <div style={panelHead}>
+              <span style={panelTitle}>Pending tasks</span>
+              {pending.length > 0 && (
+                <span style={{ fontSize:11, fontWeight:500, background:'#FAEEDA', color:'#633806', padding:'2px 8px', borderRadius:99 }}>
+                  {pending.length} due
+                </span>
+              )}
+            </div>
+            {pending.length === 0 ? (
+              <div style={{ padding:'2rem', textAlign:'center', color:'#aaa', fontSize:13 }}>
+                No pending tasks
+              </div>
+            ) : (
+              pending.map(({ assessment: a }) => (
+                <div key={a.id} style={assessRow} onClick={() => nav(`/assessment/${a.id}`)}>
+                  <div style={{ ...assessIcon, background: typeBg[a.type] }}>
+                    <span style={{ fontSize:15, color: typeColors[a.type] }}>
+                      {a.type === 'test' ? '✏' : a.type === 'assignment' ? '📝' : '📋'}
+                    </span>
+                  </div>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ fontSize:13, fontWeight:500, color:'#111', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{a.title}</div>
+                    <div style={{ fontSize:11, color:'#aaa', marginTop:1 }}>{typeLabels[a.type]} · {a.subject}</div>
+                  </div>
+                  <div style={{ flexShrink:0, textAlign:'right' }}>
+                    <div style={{ fontSize:12, fontWeight:500, background:'#EEEDFE', color:'#3C3489', padding:'3px 10px', borderRadius:99, cursor:'pointer' }}>
+                      Start
+                    </div>
+                    {a.end_datetime && (
+                      <div style={{ fontSize:11, color:'#BA7517', marginTop:3 }}>
+                        {new Date(a.end_datetime).toLocaleDateString('en-GB', { day:'numeric', month:'short' })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Score by type */}
+          <div style={{ ...card, padding:0, overflow:'hidden' }}>
+            <div style={panelHead}>
+              <span style={panelTitle}>Score by type</span>
+            </div>
+            {overall && overall.type_summary && overall.type_summary.length > 0 ? (
+              <>
+                {overall.type_summary.map(t => (
+                  <div key={t.type} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 16px', borderBottom:'0.5px solid #f0f0f0' }}>
+                    <div style={{ width:8, height:8, borderRadius:'50%', background:typeColors[t.type], flexShrink:0 }} />
+                    <div style={{ fontSize:13, color:'#333', width:90 }}>{typeLabels[t.type]}s</div>
+                    <div style={{ flex:1, height:4, background:'#f0f0f0', borderRadius:99, overflow:'hidden' }}>
+                      <div style={{ height:4, borderRadius:99, background:typeColors[t.type], width:`${t.average}%`, transition:'width 1s ease' }} />
+                    </div>
+                    <div style={{ fontSize:12, fontWeight:500, color:typeColors[t.type], minWidth:32, textAlign:'right' }}>{t.average}%</div>
+                  </div>
+                ))}
+                <div style={{ padding:'12px 16px', borderTop:'0.5px solid #f0f0f0' }}>
+                  <div style={{ fontSize:12, color:'#888', marginBottom:8, fontWeight:500 }}>Recent results</div>
+                  {submitted.slice(0, 4).map(({ assessment: a, score }) => (
+                    <div key={a.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
+                      <span style={{ fontSize:12, color:'#555', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1, marginRight:8 }}>{a.title}</span>
+                      <span style={{ fontSize:11, fontWeight:500, background: score !== null ? scoreBg(score) : '#f4f4f4', color: score !== null ? scoreColor(score) : '#aaa', padding:'2px 8px', borderRadius:99, flexShrink:0 }}>
+                        {score !== null ? `${score}%` : 'pending'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div style={{ padding:'2rem', textAlign:'center', color:'#aaa', fontSize:13 }}>No scores yet</div>
+            )}
+          </div>
+        </div>
+
+        {/* All assessments */}
+        <div style={{ ...card, padding:0, overflow:'hidden' }}>
+          <div style={panelHead}>
+            <span style={panelTitle}>All assessments</span>
+            <span style={{ fontSize:12, color:'#aaa' }}>From week 1 · missed = 0%</span>
+          </div>
+          {items.length === 0 ? (
+            <div style={{ padding:'2rem', textAlign:'center', color:'#aaa', fontSize:13 }}>No assessments assigned yet</div>
+          ) : (
+            overall?.breakdown?.map((item, i) => (
+              <div key={item.id} style={assessRow}>
+                <div style={{ ...assessIcon, background: item.status === 'submitted' ? scoreBg(item.score) : '#FCEBEB' }}>
+                  <span style={{ fontSize:14, color: item.status === 'submitted' ? scoreColor(item.score) : '#E24B4A' }}>
+                    {item.status === 'submitted' ? '✓' : '✗'}
+                  </span>
+                </div>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ fontSize:13, fontWeight:500, color:'#111', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item.title}</div>
+                  <div style={{ fontSize:11, color:'#aaa', marginTop:1 }}>
+                    {typeLabels[item.type]} · {item.subject}
+                    {item.submitted_at && ` · ${new Date(item.submitted_at).toLocaleDateString('en-GB', { day:'numeric', month:'short' })}`}
+                    {item.status !== 'submitted' && ' · not submitted'}
+                  </div>
+                </div>
+                <div style={{ flexShrink:0 }}>
+                  <span style={{ fontSize:12, fontWeight:500, background: item.status === 'submitted' ? scoreBg(item.score) : '#FCEBEB', color: item.status === 'submitted' ? scoreColor(item.score) : '#E24B4A', padding:'2px 10px', borderRadius:99 }}>
+                    {item.status === 'submitted' ? `${item.score}%` : '0%'}
+                  </span>
+                </div>
+              </div>
+            )) || items.map(({ assessment: a, is_submitted, score }) => (
+              <div key={a.id} style={assessRow}>
+                <div style={{ ...assessIcon, background: is_submitted ? scoreBg(score || 0) : '#FCEBEB' }}>
+                  <span style={{ fontSize:14, color: is_submitted ? scoreColor(score || 0) : '#E24B4A' }}>
+                    {is_submitted ? '✓' : '✗'}
+                  </span>
+                </div>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ fontSize:13, fontWeight:500, color:'#111', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{a.title}</div>
+                  <div style={{ fontSize:11, color:'#aaa', marginTop:1 }}>{typeLabels[a.type]} · {a.subject}</div>
+                </div>
+                <div style={{ flexShrink:0 }}>
+                  {is_submitted ? (
+                    <span style={{ fontSize:12, fontWeight:500, background: scoreBg(score || 0), color: scoreColor(score || 0), padding:'2px 10px', borderRadius:99 }}>
+                      {score !== null ? `${score}%` : 'pending'}
+                    </span>
+                  ) : (
+                    <button style={{ fontSize:12, fontWeight:500, background:'#EEEDFE', color:'#3C3489', border:'none', padding:'4px 12px', borderRadius:99, cursor:'pointer' }}
+                      onClick={() => nav(`/assessment/${a.id}`)}>
+                      Start
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+      </div>
     </div>
   )
 }
 
-// ── helper styles ──
-function statBox(bg, color) {
-  return {
-    background: bg, borderRadius:10, padding:'10px 14px',
-    textAlign:'center', color
-  }
-}
-
-const scoreSection = {
+const card = {
   background:'#fff',
-  borderRadius:16,
-  padding:'1.5rem',
-  margin:'1.5rem 0',
-  boxShadow:'0 4px 20px rgba(102,126,234,0.1)',
-  border:'1px solid #e8ecff'
+  border:'0.5px solid #e5e7eb',
+  borderRadius:12,
+  padding:'1rem 1.25rem',
+  marginBottom:0,
 }
-
-const s = {
-  page:        { minHeight:'100vh', background:'#f0f4ff' },
-  header:      { background:'#fff', padding:'14px 2rem', display:'flex', justifyContent:'space-between', alignItems:'center', boxShadow:'0 2px 8px rgba(0,0,0,0.08)' },
-  logo:        { fontSize:20, fontWeight:700, color:'#667eea' },
-  navLink:     { color:'#555', textDecoration:'none', fontSize:14, fontWeight:500 },
-  logoutBtn:   { background:'none', border:'1.5px solid #e0e0e0', padding:'6px 14px', borderRadius:8, cursor:'pointer', fontSize:13, color:'#e74c3c' },
-  main:        { maxWidth:1000, margin:'0 auto', padding:'2rem 1rem' },
-  welcome:     { background:'linear-gradient(135deg,#667eea,#764ba2)', color:'#fff', borderRadius:12, padding:'1.5rem 2rem', marginBottom:2 },
-  sectionTitle:{ fontSize:17, fontWeight:600, margin:'1.5rem 0 1rem' },
-  grid:        { display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', gap:16 },
-  card:        { background:'#fff', borderRadius:12, padding:'1.25rem', boxShadow:'0 2px 12px rgba(0,0,0,0.07)' },
-  badge:       { fontSize:11, fontWeight:600, color:'#fff', padding:'3px 10px', borderRadius:99 },
-  cardTitle:   { fontSize:16, fontWeight:600, margin:'4px 0' },
-  cardSub:     { fontSize:13, color:'#888' },
-  deadline:    { fontSize:12, color:'#e67e22', marginTop:6 },
-  startBtn:    { marginTop:12, width:'100%', padding:'9px', background:'linear-gradient(135deg,#667eea,#764ba2)', color:'#fff', border:'none', borderRadius:8, fontWeight:600, cursor:'pointer', fontSize:13 },
+const panelHead = {
+  padding:'10px 16px',
+  borderBottom:'0.5px solid #f0f0f0',
+  display:'flex', alignItems:'center', justifyContent:'space-between',
+}
+const panelTitle = {
+  fontSize:13, fontWeight:500, color:'#111',
+}
+const assessRow = {
+  display:'flex', alignItems:'center', gap:10,
+  padding:'9px 16px',
+  borderBottom:'0.5px solid #f5f5f5',
+  cursor:'pointer',
+  transition:'background 0.1s',
+}
+const assessIcon = {
+  width:32, height:32,
+  borderRadius:8,
+  display:'flex', alignItems:'center', justifyContent:'center',
+  flexShrink:0,
 }
