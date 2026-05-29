@@ -14,4 +14,5 @@ urlpatterns = [
     path('my/', views.StudentAssessmentListView.as_view()),
     path('<int:assessment_id>/start/', views.StartAssessmentView.as_view()),
     path('session/<int:session_id>/submit/', views.SubmitAssessmentView.as_view()),
+    path('my/overall/', views.StudentOverallScoreView.as_view()),
 ]
