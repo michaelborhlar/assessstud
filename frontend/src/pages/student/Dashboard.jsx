@@ -98,6 +98,25 @@ export default function StudentDashboard() {
 
         {/* ── Hero banner ── */}
         <div style={s.hero}>
+          <div style={{
+  position:'absolute',
+  width:250,
+  height:250,
+  borderRadius:'50%',
+  background:'rgba(255,255,255,.08)',
+  right:-80,
+  top:-80,
+}} />
+
+<div style={{
+  position:'absolute',
+  width:150,
+  height:150,
+  borderRadius:'50%',
+  background:'rgba(255,255,255,.05)',
+  right:120,
+  bottom:-50,
+}} />
           <div style={s.heroLeft}>
             <div style={s.avatar}>{initials}</div>
             <div>
@@ -318,150 +337,283 @@ export default function StudentDashboard() {
 
 // ── Styles ──────────────────────────────────────────────────────────────────
 const s = {
-  page: {
-    minHeight: '100vh',
-    background: '#F3F4F9',
-    fontFamily: 'var(--font-sans, system-ui, sans-serif)',
-  },
-  topBar: {
-    background: '#fff',
-    borderBottom: '0.5px solid #e8eaf0',
-    padding: '0 1.5rem',
-    height: 54,
-    display: 'flex',
-    alignItems: 'center',
-    position: 'sticky',
-    top: 0,
-    zIndex: 100,
-    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-  },
-  logoWrap: { display:'flex', alignItems:'center', gap:8, marginRight:'auto' },
-  logoDot:  { width:9, height:9, borderRadius:'50%', background:'#534AB7' },
-  logoText: { fontSize:17, fontWeight:500, color:'#1a1a2e', letterSpacing:'-0.2px' },
-  nav: { display:'flex', height:54 },
-  navLink: {
-    fontSize: 13,
-    textDecoration: 'none',
-    padding: '0 16px',
-    height: 54,
-    display: 'inline-flex',
-    alignItems: 'center',
-    transition: 'color 0.15s',
-  },
-  logoutBtn: {
-    marginLeft: 16,
-    fontSize: 12,
-    color: '#E24B4A',
-    background: 'none',
-    border: '0.5px solid #f0c0c0',
-    padding: '5px 14px',
-    borderRadius: 99,
-    cursor: 'pointer',
-    fontWeight: 500,
-  },
-  body: { maxWidth: 960, margin: '0 auto', padding: '1.5rem 1rem' },
+page: {
+minHeight: '100vh',
+background:
+'linear-gradient(135deg,#eef2ff 0%,#f8faff 40%,#f4f7ff 100%)',
+fontFamily: 'Inter, system-ui, sans-serif',
+position: 'relative',
+},
 
-  hero: {
-    background: 'linear-gradient(135deg, #534AB7 0%, #7F77DD 50%, #AFA9EC 100%)',
-    borderRadius: 16,
-    padding: '1.5rem 1.75rem',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-    color: '#fff',
-  },
-  heroLeft:  { display:'flex', alignItems:'center', gap:14 },
-  heroRight: { textAlign:'right' },
-  heroName:  { fontSize:18, fontWeight:500, color:'#fff' },
-  heroSub:   { fontSize:13, color:'rgba(255,255,255,0.75)', marginTop:3 },
-  heroDate:  { fontSize:12, color:'rgba(255,255,255,0.6)' },
-  avatar: {
-    width: 48, height: 48, borderRadius: '50%',
-    background: 'rgba(255,255,255,0.22)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: 16, fontWeight: 500, color: '#fff', flexShrink: 0,
-    border: '2px solid rgba(255,255,255,0.35)',
-  },
-  classBadge: {
-    display: 'inline-flex', alignItems: 'center',
-    fontSize: 12, fontWeight: 500,
-    background: 'rgba(255,255,255,0.2)',
-    color: '#fff',
-    padding: '3px 12px', borderRadius: 99, marginTop: 6,
-    border: '1px solid rgba(255,255,255,0.3)',
-  },
+topBar: {
+background: 'rgba(255,255,255,0.85)',
+backdropFilter: 'blur(20px)',
+borderBottom: '1px solid rgba(255,255,255,0.5)',
+padding: '0 2rem',
+height: 70,
+display: 'flex',
+alignItems: 'center',
+position: 'sticky',
+top: 0,
+zIndex: 100,
+boxShadow: '0 10px 40px rgba(83,74,183,0.08)',
+},
 
-  statGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(4,1fr)',
-    gap: 10,
-    margin: '0 0 12px',
-  },
-  statCard: {
-    background: '#fff',
-    borderRadius: 14,
-    padding: '1rem 1.1rem',
-    border: '0.5px solid #eaeaf0',
-  },
-  statIcon: {
-    width: 34, height: 34, borderRadius: 8,
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: 16, fontWeight: 500,
-  },
-  progressWrap: { height: 4, background: '#f0f0f4', borderRadius: 99, marginTop: 10, overflow: 'hidden' },
-  progressFill: { height: 4, borderRadius: 99, transition: 'width 1.2s ease' },
+logoWrap: {
+display:'flex',
+alignItems:'center',
+gap:10,
+marginRight:'auto',
+},
 
-  twoCol: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: 10,
-    marginBottom: 12,
-  },
+logoDot: {
+width:12,
+height:12,
+borderRadius:'50%',
+background:'linear-gradient(135deg,#534AB7,#8A7FFF)',
+boxShadow:'0 0 15px rgba(83,74,183,.5)',
+},
 
-  panel: {
-    background: '#fff',
-    border: '0.5px solid #eaeaf0',
-    borderRadius: 14,
-    overflow: 'hidden',
-  },
-  panelHead: {
-    padding: '12px 16px',
-    borderBottom: '0.5px solid #f0f0f5',
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    background: '#fafafe',
-  },
-  panelTitle: { fontSize: 13, fontWeight: 500, color: '#1a1a2e' },
+logoText: {
+fontSize:20,
+fontWeight:700,
+color:'#1a1a2e',
+letterSpacing:'-.5px',
+},
 
-  pill: {
-    fontSize: 11, fontWeight: 500,
-    padding: '3px 10px', borderRadius: 99,
-    display: 'inline-block',
-  },
+nav:{
+display:'flex',
+height:70,
+gap:10,
+},
 
-  assessRow: {
-    display: 'flex', alignItems: 'center', gap: 12,
-    padding: '10px 16px',
-    borderBottom: '0.5px solid #f5f5f8',
-    cursor: 'pointer',
-    transition: 'background 0.12s',
-    background: '#fff',
-  },
-  assessIcon: {
-    width: 34, height: 34, borderRadius: 9,
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    flexShrink: 0,
-  },
-  assessTitle: {
-    fontSize: 13, fontWeight: 500, color: '#1a1a2e',
-    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-  },
-  assessMeta: { fontSize: 11, color: '#bbb', marginTop: 2 },
+navLink:{
+fontSize:14,
+textDecoration:'none',
+padding:'0 18px',
+height:70,
+display:'inline-flex',
+alignItems:'center',
+transition:'all .3s ease',
+borderRadius:12,
+},
 
-  emptyState: {
-    padding: '2.5rem',
-    textAlign: 'center',
-    color: '#bbb',
-    fontSize: 13,
-  },
+logoutBtn:{
+marginLeft:20,
+fontSize:13,
+color:'#fff',
+background:'linear-gradient(135deg,#ff6b6b,#e24b4a)',
+border:'none',
+padding:'10px 18px',
+borderRadius:999,
+cursor:'pointer',
+fontWeight:600,
+boxShadow:'0 10px 20px rgba(226,75,74,.25)',
+},
+
+body:{
+maxWidth:1400,
+margin:'0 auto',
+padding:'2rem',
+},
+
+hero:{
+background:
+'linear-gradient(135deg,#534AB7 0%,#7268E6 50%,#9A92FF 100%)',
+borderRadius:28,
+padding:'2rem',
+display:'flex',
+justifyContent:'space-between',
+alignItems:'center',
+marginBottom:20,
+color:'#fff',
+boxShadow:'0 25px 60px rgba(83,74,183,.35)',
+position:'relative',
+overflow:'hidden',
+},
+
+heroLeft:{
+display:'flex',
+alignItems:'center',
+gap:18,
+position:'relative',
+zIndex:2,
+},
+
+heroRight:{
+textAlign:'right',
+position:'relative',
+zIndex:2,
+},
+
+heroName:{
+fontSize:28,
+fontWeight:700,
+marginBottom:5,
+},
+
+heroSub:{
+fontSize:14,
+color:'rgba(255,255,255,.85)',
+},
+
+heroDate:{
+fontSize:13,
+color:'rgba(255,255,255,.75)',
+},
+
+avatar:{
+width:70,
+height:70,
+borderRadius:'50%',
+background:'rgba(255,255,255,.15)',
+backdropFilter:'blur(10px)',
+display:'flex',
+alignItems:'center',
+justifyContent:'center',
+fontSize:22,
+fontWeight:700,
+border:'3px solid rgba(255,255,255,.35)',
+boxShadow:'0 10px 30px rgba(0,0,0,.15)',
+},
+
+classBadge:{
+display:'inline-flex',
+alignItems:'center',
+fontSize:13,
+fontWeight:600,
+background:'rgba(255,255,255,.18)',
+padding:'8px 14px',
+borderRadius:999,
+marginTop:10,
+border:'1px solid rgba(255,255,255,.25)',
+backdropFilter:'blur(12px)',
+},
+
+statGrid:{
+display:'grid',
+gridTemplateColumns:'repeat(4,1fr)',
+gap:16,
+marginBottom:20,
+},
+
+statCard:{
+background:'rgba(255,255,255,.85)',
+backdropFilter:'blur(18px)',
+borderRadius:22,
+padding:'1.4rem',
+border:'1px solid rgba(255,255,255,.7)',
+boxShadow:'0 15px 35px rgba(83,74,183,.08)',
+transition:'all .35s ease',
+},
+
+statIcon:{
+width:50,
+height:50,
+borderRadius:14,
+display:'flex',
+alignItems:'center',
+justifyContent:'center',
+fontSize:20,
+fontWeight:600,
+boxShadow:'0 8px 20px rgba(0,0,0,.06)',
+},
+
+progressWrap:{
+height:8,
+background:'#eef1f7',
+borderRadius:999,
+overflow:'hidden',
+marginTop:14,
+},
+
+progressFill:{
+height:'100%',
+borderRadius:999,
+transition:'width 1s ease',
+},
+
+twoCol:{
+display:'grid',
+gridTemplateColumns:'1.2fr .8fr',
+gap:16,
+marginBottom:20,
+},
+
+panel:{
+background:'rgba(255,255,255,.88)',
+backdropFilter:'blur(18px)',
+borderRadius:22,
+overflow:'hidden',
+border:'1px solid rgba(255,255,255,.7)',
+boxShadow:'0 15px 40px rgba(83,74,183,.08)',
+},
+
+panelHead:{
+padding:'18px 20px',
+display:'flex',
+justifyContent:'space-between',
+alignItems:'center',
+background:
+'linear-gradient(90deg,#fafaff,#f5f7ff)',
+borderBottom:'1px solid #f0f2ff',
+},
+
+panelTitle:{
+fontSize:15,
+fontWeight:700,
+color:'#1a1a2e',
+},
+
+pill:{
+fontSize:11,
+fontWeight:700,
+padding:'6px 12px',
+borderRadius:999,
+letterSpacing:'.3px',
+},
+
+assessRow:{
+display:'flex',
+alignItems:'center',
+gap:14,
+padding:'14px 18px',
+borderBottom:'1px solid #f4f6ff',
+cursor:'pointer',
+transition:'all .25s ease',
+background:'#fff',
+},
+
+assessIcon:{
+width:42,
+height:42,
+borderRadius:12,
+display:'flex',
+alignItems:'center',
+justifyContent:'center',
+flexShrink:0,
+boxShadow:'0 8px 20px rgba(0,0,0,.05)',
+},
+
+assessTitle:{
+fontSize:14,
+fontWeight:600,
+color:'#111827',
+overflow:'hidden',
+textOverflow:'ellipsis',
+whiteSpace:'nowrap',
+},
+
+assessMeta:{
+fontSize:12,
+color:'#9ca3af',
+marginTop:4,
+},
+
+emptyState:{
+padding:'4rem 2rem',
+textAlign:'center',
+color:'#9ca3af',
+fontSize:14,
+},
 }
