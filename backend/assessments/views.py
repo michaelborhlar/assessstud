@@ -179,6 +179,38 @@ class AssessmentDeleteView(APIView):
         return Response({'message': 'Assessment deleted successfully'})
 
 # ── Student: see available assessments ────────────────────
+# ── Student: see available assessments ────────────────────
+class StudentAssessmentListView(APIView):
+    def get(self, request):
+        student = request.user
+
+        if not student.student_class:
+            return Response([])
+
+        assessments = Assessment.objects.filter(
+            target_class=student.student_class,
+            is_active=True
+        ).order_by('-created_at')
+
+        result = []
+        for a in assessments:
+            try:
+                sa = StudentAssessment.objects.get(student=student, assessment=a)
+                result.append({
+                    'assessment': AssessmentListSerializer(a).data,
+                    'is_submitted': sa.is_submitted,
+                    'score': sa.score,
+                    'started_at': sa.started_at,
+                })
+            except StudentAssessment.DoesNotExist:
+                result.append({
+                    'assessment': AssessmentListSerializer(a).data,
+                    'is_submitted': False,
+                    'score': None,
+                    'started_at': None,
+                })
+
+        return Response(result)
 
 
 # ── Student: start & get questions ────────────────────────
