@@ -591,3 +591,57 @@ class StudentOverallScoreView(APIView):
             'type_summary': type_summary,
             'breakdown': breakdown,
         })
+
+# ── Admin: redo (reset) a student submission ──────────────
+class AdminRedoSubmissionView(APIView):
+    def post(self, request, session_id):
+        if not is_admin(request.user):
+            return Response({'error': 'Forbidden'}, status=403)
+
+        try:
+            sa = StudentAssessment.objects.get(id=session_id)
+        except StudentAssessment.DoesNotExist:
+            return Response({'error': 'Session not found'}, status=404)
+
+        # wipe all previous answers and reset submission state
+        sa.answers.all().delete()
+        sa.is_submitted = False
+        sa.submitted_at = None
+        sa.score = None
+        sa.started_at = None
+        sa.questions_order = []
+        sa.save()
+
+        return Response({
+            'message': f'Submission reset for {sa.student.first_name} {sa.student.last_name}. They can now retake the assessment.'
+        })
+
+
+# ── Admin: extend deadline on an assessment ───────────────
+class AdminExtendDeadlineView(APIView):
+    def patch(self, request, assessment_id):
+        if not is_admin(request.user):
+            return Response({'error': 'Forbidden'}, status=403)
+
+        try:
+            assessment = Assessment.objects.get(id=assessment_id, created_by=request.user)
+        except Assessment.DoesNotExist:
+            return Response({'error': 'Assessment not found'}, status=404)
+
+        new_end = request.data.get('end_datetime')
+        if not new_end:
+            return Response({'error': 'end_datetime is required'}, status=400)
+
+        from django.utils.dateparse import parse_datetime
+        parsed = parse_datetime(new_end)
+        if not parsed:
+            return Response({'error': 'Invalid datetime format. Use ISO 8601 e.g. 2025-06-10T23:59:00'}, status=400)
+
+        assessment.end_datetime = parsed
+        assessment.save()
+
+        return Response({
+            'message': 'Deadline extended successfully.',
+            'assessment_id': assessment.id,
+            'new_end_datetime': assessment.end_datetime,
+        })
