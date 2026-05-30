@@ -425,13 +425,49 @@ class AssessmentSubmissionsView(APIView):
         ).select_related('student')
         data = []
         for s in sessions:
+            answers_data = []
+            for ans in s.answers.all().select_related('question', 'selected_choice'):
+                q = ans.question
+                # get correct answer text
+                correct_text = ''
+                correct_label = ''
+                if q.correct_text_answer:
+                    correct_text = q.correct_text_answer
+                else:
+                    try:
+                        correct_choice = q.choices.filter(is_correct=True).first()
+                        if correct_choice:
+                            correct_text = correct_choice.text
+                            correct_label = correct_choice.label
+                    except Exception:
+                        pass
+
+                answers_data.append({
+                    'id': ans.id,
+                    'question_id': q.id,
+                    'question_text': q.text,
+                    'question_image': ans.question.image.url if q.image else None,
+                    'selected_choice': ans.selected_choice_id,
+                    'selected_choice_text': ans.selected_choice.text if ans.selected_choice else None,
+                    'selected_choice_label': ans.selected_choice.label if ans.selected_choice else None,
+                    'typed_answer': ans.typed_answer,
+                    'uploaded_image': ans.uploaded_image.url if ans.uploaded_image else None,
+                    'correct_answer_text': correct_text,
+                    'correct_answer_label': correct_label,
+                    'is_correct': ans.is_correct,
+                    'marks_awarded': ans.marks_awarded,
+                    'admin_feedback': ans.admin_feedback,
+                    'reviewed': ans.reviewed,
+                })
+
             data.append({
                 'session_id': s.id,
                 'student': f"{s.student.first_name} {s.student.last_name}",
                 'student_class': s.student.student_class.name if s.student.student_class else '',
                 'score': s.score,
                 'submitted_at': s.submitted_at,
-                'answers': StudentAnswerSerializer(s.answers.all(), many=True).data
+                'auto_submitted': s.auto_submitted if hasattr(s, 'auto_submitted') else False,
+                'answers': answers_data
             })
         return Response(data)
     
