@@ -37,14 +37,30 @@ class RegisterAdminSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     student_class_name = serializers.SerializerMethodField()
+    date_joined_display = serializers.SerializerMethodField()
+    last_seen_display   = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'first_name', 'last_name',
-                  'role', 'student_class', 'student_class_name']
+        fields = [
+            'id', 'username', 'first_name', 'last_name',
+            'role', 'student_class', 'student_class_name',
+            'date_joined', 'date_joined_display',
+            'last_seen', 'last_seen_display',
+        ]
 
     def get_student_class_name(self, obj):
         return obj.student_class.name if obj.student_class else None
+
+    def get_date_joined_display(self, obj):
+        if obj.date_joined:
+            return obj.date_joined.strftime('%d %b %Y, %I:%M %p')
+        return None
+
+    def get_last_seen_display(self, obj):
+        if obj.last_seen:
+            return obj.last_seen.strftime('%d %b %Y, %I:%M %p')
+        return 'Never logged in'
 
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()

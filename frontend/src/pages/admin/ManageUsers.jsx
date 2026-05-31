@@ -155,6 +155,8 @@ export default function ManageUsers() {
                   <th style={th}>Username</th>
                   {tab === 'students' && <th style={th}>Class</th>}
                   <th style={th}>Role</th>
+                  <th style={th}>Joined</th>
+                  <th style={th}>Last Seen</th>
                   <th style={th}>Action</th>
                 </tr>
               </thead>
@@ -171,6 +173,14 @@ export default function ManageUsers() {
                         {u.role}
                       </span>
                     </td>
+                    <td style={td} title={u.date_joined}>
+                    {u.date_joined_display || '—'}
+                    </td>
+                    <td style={td} title={u.last_seen}>
+                    <span style={{ color: u.last_seen ? '#1D9E75' : '#aaa', fontSize:12 }}>
+                       {u.last_seen_display || '—'}
+                      </span>
+                      </td>
                     <td style={td}>
                       {u.id !== user.id ? (
                         <button onClick={() => setConfirmDelete(u)}
