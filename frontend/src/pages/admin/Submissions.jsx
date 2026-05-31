@@ -23,6 +23,7 @@ export default function Submissions() {
   const [redoMsg, setRedoMsg]         = useState({})
   const [confirmRedo, setConfirmRedo] = useState(null)
   const [expanded, setExpanded]       = useState({})
+  const [overriding, setOverriding]   = useState({}) // tracks which answer IDs are in override mode
 
   function load() {
     api.get(`/assessments/${id}/submissions/`)
@@ -34,8 +35,13 @@ export default function Submissions() {
     setExpanded(prev => ({ ...prev, [sessionId]: !prev[sessionId] }))
   }
 
+  function toggleOverride(answerId) {
+    setOverriding(prev => ({ ...prev, [answerId]: !prev[answerId] }))
+  }
+
   async function handleReview(answerId, payload) {
     await api.patch(`/assessments/answers/${answerId}/review/`, payload)
+    setOverriding(prev => ({ ...prev, [answerId]: false }))
     load()
   }
 
@@ -195,10 +201,11 @@ export default function Submissions() {
             {expanded[s.session_id] && (
               <div>
                 {s.answers.map((a, idx) => {
-                  const studentAns = a.typed_answer || a.selected_choice_text || '—'
-                  const correctAns = a.correct_answer_text || '—'
-                  const isCorrect  = a.is_correct
+                  const studentAns  = a.typed_answer || a.selected_choice_text || '—'
+                  const correctAns  = a.correct_answer_text || '—'
+                  const isCorrect   = a.is_correct
                   const needsReview = !a.reviewed && a.is_correct === null
+                  const isOverriding = overriding[a.id]
 
                   return (
                     <div key={a.id} style={{
@@ -227,7 +234,11 @@ export default function Submissions() {
                         <div style={{ background:'#f8f8ff', borderRadius:8, padding:'10px 12px', border:'0.5px solid #e8e8f5' }}>
                           <div style={{ fontSize:11, color:'#888', marginBottom:4, fontWeight:500 }}>Student answered</div>
                           <div style={{ fontSize:13, color:'#1a1a2e', fontWeight:500 }}>
-                            {a.selected_choice_label && <span style={{ fontSize:11, background:'#EEEDFE', color:'#534AB7', padding:'1px 6px', borderRadius:4, marginRight:6 }}>{a.selected_choice_label}</span>}
+                            {a.selected_choice_label && (
+                              <span style={{ fontSize:11, background:'#EEEDFE', color:'#534AB7', padding:'1px 6px', borderRadius:4, marginRight:6 }}>
+                                {a.selected_choice_label}
+                              </span>
+                            )}
                             {studentAns}
                           </div>
                           {a.uploaded_image && (
@@ -242,42 +253,72 @@ export default function Submissions() {
                         <div style={{ background:'#f0fff8', borderRadius:8, padding:'10px 12px', border:'0.5px solid #c8eed8' }}>
                           <div style={{ fontSize:11, color:'#1D9E75', marginBottom:4, fontWeight:500 }}>Correct answer</div>
                           <div style={{ fontSize:13, color:'#1a1a2e', fontWeight:500 }}>
-                            {a.correct_answer_label && <span style={{ fontSize:11, background:'#EAF3DE', color:'#3B6D11', padding:'1px 6px', borderRadius:4, marginRight:6 }}>{a.correct_answer_label}</span>}
+                            {a.correct_answer_label && (
+                              <span style={{ fontSize:11, background:'#EAF3DE', color:'#3B6D11', padding:'1px 6px', borderRadius:4, marginRight:6 }}>
+                                {a.correct_answer_label}
+                              </span>
+                            )}
                             {correctAns}
                           </div>
                         </div>
 
-                        {/* Result / review */}
-                        <div style={{ background: isCorrect===true?'#f0fff8':isCorrect===false?'#fff5f5':'#fffbf0', borderRadius:8, padding:'10px 12px', border:`0.5px solid ${isCorrect===true?'#c8eed8':isCorrect===false?'#ffd0d0':'#ffe8a0'}` }}>
+                        {/* Result / review / override */}
+                        <div style={{
+                          background: isCorrect===true?'#f0fff8':isCorrect===false?'#fff5f5':'#fffbf0',
+                          borderRadius:8, padding:'10px 12px',
+                          border:`0.5px solid ${isCorrect===true?'#c8eed8':isCorrect===false?'#ffd0d0':'#ffe8a0'}`
+                        }}>
                           <div style={{ fontSize:11, color:'#888', marginBottom:4, fontWeight:500 }}>Result</div>
-                          {a.reviewed ? (
-                            <div>
-                              <span style={{ fontSize:13, fontWeight:500, color: isCorrect?'#1D9E75':'#E24B4A' }}>
-                                {isCorrect ? '✓ Correct' : '✗ Wrong'}
-                              </span>
-                              {a.admin_feedback && (
-                                <div style={{ fontSize:11, color:'#aaa', marginTop:4 }}>{a.admin_feedback}</div>
-                              )}
-                            </div>
-                          ) : needsReview ? (
+
+                          {/* Case 1 — needs review (typed_with_image, not yet reviewed) */}
+                          {needsReview && !isOverriding && (
                             <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
                               <span style={{ fontSize:11, color:'#BA7517', fontWeight:500 }}>Needs review</span>
                               <div style={{ display:'flex', gap:5 }}>
-                                <button onClick={() => handleReview(a.id, { is_correct:true, marks_awarded:1, admin_feedback:'Correct' })}
-                                  style={{ flex:1, fontSize:11, fontWeight:500, background:'#EAF3DE', color:'#27500A', border:'none', padding:'4px 6px', borderRadius:6, cursor:'pointer' }}>
-                                  ✓
+                                <button
+                                  onClick={() => handleReview(a.id, { is_correct:true, marks_awarded:1, admin_feedback:'Correct' })}
+                                  style={{ flex:1, fontSize:11, fontWeight:500, background:'#EAF3DE', color:'#27500A', border:'none', padding:'5px 6px', borderRadius:6, cursor:'pointer' }}>
+                                  ✓ Correct
                                 </button>
-                                <button onClick={() => handleReview(a.id, { is_correct:false, marks_awarded:0, admin_feedback:'Incorrect' })}
-                                  style={{ flex:1, fontSize:11, fontWeight:500, background:'#FCEBEB', color:'#791F1F', border:'none', padding:'4px 6px', borderRadius:6, cursor:'pointer' }}>
-                                  ✗
+                                <button
+                                  onClick={() => handleReview(a.id, { is_correct:false, marks_awarded:0, admin_feedback:'Incorrect' })}
+                                  style={{ flex:1, fontSize:11, fontWeight:500, background:'#FCEBEB', color:'#791F1F', border:'none', padding:'5px 6px', borderRadius:6, cursor:'pointer' }}>
+                                  ✗ Wrong
                                 </button>
                               </div>
                             </div>
-                          ) : (
-                            <span style={{ fontSize:13, fontWeight:500, color: isCorrect===true?'#1D9E75':isCorrect===false?'#E24B4A':'#aaa' }}>
-                              {isCorrect===true?'✓ Correct':isCorrect===false?'✗ Wrong':'—'}
-                            </span>
                           )}
+
+                          {/* Case 2 — already reviewed, show result + override option */}
+                          {(a.reviewed || isCorrect !== null) && !isOverriding && !needsReview && (
+                            <div>
+                              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
+                                <span style={{ fontSize:13, fontWeight:500, color:isCorrect===true?'#1D9E75':isCorrect===false?'#E24B4A':'#aaa' }}>
+                                  {isCorrect===true ? '✓ Correct' : isCorrect===false ? '✗ Wrong' : '—'}
+                                </span>
+                                {/* Override button — admin can change the mark */}
+                                <button
+                                  onClick={() => toggleOverride(a.id)}
+                                  style={{ fontSize:10, fontWeight:500, background:'#f0f0f5', color:'#666', border:'none', padding:'3px 8px', borderRadius:6, cursor:'pointer' }}
+                                  title="Override this mark">
+                                  Edit
+                                </button>
+                              </div>
+                              {a.admin_feedback && (
+                                <div style={{ fontSize:11, color:'#aaa' }}>{a.admin_feedback}</div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Case 3 — override mode: show full review buttons with feedback input */}
+                          {isOverriding && (
+                            <OverrideForm
+                              answerId={a.id}
+                              onSave={handleReview}
+                              onCancel={() => toggleOverride(a.id)}
+                            />
+                          )}
+
                         </div>
                       </div>
 
@@ -290,6 +331,40 @@ export default function Submissions() {
           </div>
         ))}
       </div>
+    </div>
+  )
+}
+
+// ── Override form component ──────────────────────────────────────────────────
+function OverrideForm({ answerId, onSave, onCancel }) {
+  const [feedback, setFeedback] = useState('')
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
+      <span style={{ fontSize:11, color:'#534AB7', fontWeight:500 }}>Override mark</span>
+      <input
+        value={feedback}
+        onChange={e => setFeedback(e.target.value)}
+        placeholder="Feedback (optional)"
+        style={{ fontSize:11, padding:'4px 8px', border:'0.5px solid #e0e0e0', borderRadius:6, color:'#333' }}
+      />
+      <div style={{ display:'flex', gap:5 }}>
+        <button
+          onClick={() => onSave(answerId, { is_correct:true, marks_awarded:1, admin_feedback: feedback || 'Correct' })}
+          style={{ flex:1, fontSize:11, fontWeight:500, background:'#EAF3DE', color:'#27500A', border:'none', padding:'5px 4px', borderRadius:6, cursor:'pointer' }}>
+          ✓ Correct
+        </button>
+        <button
+          onClick={() => onSave(answerId, { is_correct:false, marks_awarded:0, admin_feedback: feedback || 'Incorrect' })}
+          style={{ flex:1, fontSize:11, fontWeight:500, background:'#FCEBEB', color:'#791F1F', border:'none', padding:'5px 4px', borderRadius:6, cursor:'pointer' }}>
+          ✗ Wrong
+        </button>
+      </div>
+      <button
+        onClick={onCancel}
+        style={{ fontSize:10, color:'#aaa', background:'none', border:'none', cursor:'pointer', textAlign:'left', marginTop:2 }}>
+        Cancel
+      </button>
     </div>
   )
 }
