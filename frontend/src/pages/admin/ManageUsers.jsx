@@ -174,13 +174,13 @@ export default function ManageUsers() {
                       </span>
                     </td>
                     <td style={td} title={u.date_joined}>
-                    {u.date_joined_display || '—'}
+                      {u.date_joined_display || '—'}
                     </td>
                     <td style={td} title={u.last_seen}>
-                    <span style={{ color: u.last_seen ? '#1D9E75' : '#aaa', fontSize:12 }}>
-                       {u.last_seen_display || '—'}
+                      <span style={{ color: u.last_seen ? '#1D9E75' : '#aaa', fontSize:12 }}>
+                        {u.last_seen_display || '—'}
                       </span>
-                      </td>
+                    </td>
                     <td style={td}>
                       {u.id !== user.id ? (
                         <button onClick={() => setConfirmDelete(u)}
@@ -193,9 +193,12 @@ export default function ManageUsers() {
                     </td>
                   </tr>
                 ))}
+
+                {/* ← only change: colSpan now matches actual column count */}
                 {(tab === 'students' ? filteredStudents : filteredAdmins).length === 0 && (
                   <tr>
-                    <td colSpan={5} style={{ padding:'2rem', textAlign:'center', color:'#888' }}>
+                    <td colSpan={tab === 'students' ? 7 : 6}
+                      style={{ padding:'2rem', textAlign:'center', color:'#888' }}>
                       No {tab} found
                     </td>
                   </tr>
