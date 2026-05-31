@@ -713,3 +713,85 @@ class AdminExtendDeadlineView(APIView):
             'assessment_id': assessment.id,
             'new_end_datetime': assessment.end_datetime,
         })
+        
+class ClassRankingsView(APIView):
+    def get(self, request, class_id):
+        if not is_admin(request.user):
+            return Response({'error': 'Forbidden'}, status=403)
+
+        from classes.models import Class
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+
+        try:
+            cls = Class.objects.get(id=class_id)
+        except Class.DoesNotExist:
+            return Response({'error': 'Class not found'}, status=404)
+
+        now = timezone.now()
+        students = User.objects.filter(
+            student_class=cls, role='student'
+        )
+
+        all_assessments = Assessment.objects.filter(
+            target_class=cls, is_active=True
+        )
+        total_assessments = all_assessments.count()
+
+        rankings = []
+
+        for student in students:
+            total_score  = 0
+            submitted    = 0
+            missed       = 0
+            pending      = 0
+
+            for a in all_assessments:
+                try:
+                    sa = StudentAssessment.objects.get(
+                        student=student, assessment=a
+                    )
+                    if sa.is_submitted:
+                        total_score += sa.score if sa.score is not None else 0
+                        submitted   += 1
+                    else:
+                        is_expired = a.end_datetime and now > a.end_datetime
+                        if is_expired:
+                            missed  += 1
+                        else:
+                            pending += 1
+                except StudentAssessment.DoesNotExist:
+                    is_expired = a.end_datetime and now > a.end_datetime
+                    if is_expired:
+                        missed  += 1
+                    else:
+                        pending += 1
+
+            overall = round(
+                total_score / total_assessments, 1
+            ) if total_assessments > 0 else 0
+
+            rankings.append({
+                'student_id':   student.id,
+                'name':         f"{student.first_name} {student.last_name}",
+                'username':     student.username,
+                'overall_score': overall,
+                'submitted':    submitted,
+                'missed':       missed,
+                'pending':      pending,
+                'total':        total_assessments,
+            })
+
+        # sort highest to lowest
+        rankings.sort(key=lambda x: x['overall_score'], reverse=True)
+
+        # add rank numbers
+        for i, r in enumerate(rankings):
+            r['rank'] = i + 1
+
+        return Response({
+            'class_name':       cls.name,
+            'total_assessments': total_assessments,
+            'total_students':   len(rankings),
+            'rankings':         rankings,
+        })

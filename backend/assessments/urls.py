@@ -11,6 +11,7 @@ urlpatterns = [
     path('<int:assessment_id>/delete/', views.AssessmentDeleteView.as_view()),
     path('<int:assessment_id>/extend-deadline/', views.AdminExtendDeadlineView.as_view()),   # NEW
     path('session/<int:session_id>/redo/', views.AdminRedoSubmissionView.as_view()),         # NEW
+    path('class-rankings/<int:class_id>/', views.ClassRankingsView.as_view()),  # ← add this
     # student
     path('my/', views.StudentAssessmentListView.as_view()),
     path('<int:assessment_id>/start/', views.StartAssessmentView.as_view()),
