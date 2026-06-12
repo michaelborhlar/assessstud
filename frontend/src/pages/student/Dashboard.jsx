@@ -34,14 +34,12 @@ export default function StudentDashboard() {
 
   const now = new Date()
 
-  // missed = not submitted AND deadline has passed
   function isMissed(item) {
     if (item.is_submitted) return false
     if (!item.assessment.end_datetime) return false
     return new Date(item.assessment.end_datetime) < now
   }
 
-  // pending = not submitted AND (no deadline OR deadline not yet passed)
   function isPending(item) {
     if (item.is_submitted) return false
     if (!item.assessment.end_datetime) return true
@@ -73,15 +71,51 @@ export default function StudentDashboard() {
   return (
     <div style={s.page}>
 
+      {/* ── Mobile responsive styles ── */}
+      <style>{`
+        @media (max-width: 768px) {
+          .sd-topbar { padding: 0 1rem !important; height: 58px !important; }
+          .sd-logo-text { font-size: 16px !important; }
+          .sd-nav { gap: 2px !important; }
+          .sd-nav-link { padding: 0 10px !important; font-size: 13px !important; height: 58px !important; }
+          .sd-logout-btn { padding: 8px 12px !important; font-size: 12px !important; margin-left: 8px !important; }
+
+          .sd-body { padding: 1rem !important; }
+
+          .sd-hero { flex-direction: column !important; align-items: flex-start !important; gap: 14px !important; padding: 1.2rem !important; border-radius: 20px !important; }
+          .sd-hero-name { font-size: 20px !important; }
+          .sd-hero-right { text-align: left !important; }
+          .sd-class-badge { margin-top: 6px !important; }
+          .sd-avatar { width: 52px !important; height: 52px !important; font-size: 17px !important; }
+
+          .sd-stat-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+          .sd-stat-card { padding: 1rem !important; border-radius: 16px !important; }
+
+          .sd-two-col { grid-template-columns: 1fr !important; gap: 12px !important; }
+
+          .sd-assess-title { font-size: 13px !important; }
+          .sd-assess-row { padding: 12px 14px !important; gap: 10px !important; }
+          .sd-assess-icon { width: 36px !important; height: 36px !important; }
+          .sd-panel { border-radius: 16px !important; }
+          .sd-panel-head { padding: 14px 16px !important; }
+        }
+
+        @media (max-width: 400px) {
+          .sd-stat-grid { grid-template-columns: 1fr 1fr !important; }
+          .sd-hero-name { font-size: 17px !important; }
+          .sd-logo-text { font-size: 14px !important; }
+        }
+      `}</style>
+
       {/* ── Top bar ── */}
-      <header style={s.topBar}>
+      <header style={s.topBar} className="sd-topbar">
         <div style={s.logoWrap}>
           <div style={s.logoDot} />
-          <span style={s.logoText}>AssessStud</span>
+          <span style={s.logoText} className="sd-logo-text">AssessStud</span>
         </div>
-        <nav style={s.nav}>
+        <nav style={s.nav} className="sd-nav">
           {[['Dashboard','/dashboard'],['Learn','/learn']].map(([label, path]) => (
-            <Link key={path} to={path} style={{
+            <Link key={path} to={path} className="sd-nav-link" style={{
               ...s.navLink,
               color: path === '/dashboard' ? '#534AB7' : '#888',
               borderBottom: path === '/dashboard' ? '2px solid #534AB7' : '2px solid transparent',
@@ -91,36 +125,35 @@ export default function StudentDashboard() {
             </Link>
           ))}
         </nav>
-        <button onClick={doLogout} style={s.logoutBtn}>Logout</button>
+        <button onClick={doLogout} style={s.logoutBtn} className="sd-logout-btn">Logout</button>
       </header>
 
-      <div style={s.body}>
+      <div style={s.body} className="sd-body">
 
         {/* ── Hero banner ── */}
-        <div style={s.hero}>
+        <div style={s.hero} className="sd-hero">
           <div style={{
-  position:'absolute',
-  width:250,
-  height:250,
-  borderRadius:'50%',
-  background:'rgba(255,255,255,.08)',
-  right:-80,
-  top:-80,
-}} />
-
-<div style={{
-  position:'absolute',
-  width:150,
-  height:150,
-  borderRadius:'50%',
-  background:'rgba(255,255,255,.05)',
-  right:120,
-  bottom:-50,
-}} />
+            position:'absolute',
+            width:250,
+            height:250,
+            borderRadius:'50%',
+            background:'rgba(255,255,255,.08)',
+            right:-80,
+            top:-80,
+          }} />
+          <div style={{
+            position:'absolute',
+            width:150,
+            height:150,
+            borderRadius:'50%',
+            background:'rgba(255,255,255,.05)',
+            right:120,
+            bottom:-50,
+          }} />
           <div style={s.heroLeft}>
-            <div style={s.avatar}>{initials}</div>
+            <div style={s.avatar} className="sd-avatar">{initials}</div>
             <div>
-              <div style={s.heroName}>Welcome back, {user?.first_name} 👋</div>
+              <div style={s.heroName} className="sd-hero-name">Welcome back, {user?.first_name} 👋</div>
               <div style={s.heroSub}>
                 {pending.length > 0
                   ? `You have ${pending.length} task${pending.length > 1 ? 's' : ''} pending`
@@ -128,21 +161,21 @@ export default function StudentDashboard() {
               </div>
             </div>
           </div>
-          <div style={s.heroRight}>
+          <div style={s.heroRight} className="sd-hero-right">
             <div style={s.heroDate}>{today}</div>
-            <div style={s.classBadge}>{user?.student_class_name}</div>
+            <div style={s.classBadge} className="sd-class-badge">{user?.student_class_name}</div>
           </div>
         </div>
 
         {/* ── Stat cards ── */}
-        <div style={s.statGrid}>
+        <div style={s.statGrid} className="sd-stat-grid">
           {[
             { label:'Overall score',  val:`${overallScore}%`, sub:'All assessments',    color:'#534AB7', bg:'#EEEDFE', pct:overallScore },
             { label:'Submitted',      val:submitted.length,   sub:`Out of ${total}`,    color:'#1D9E75', bg:'#EAF3DE', pct:total?submitted.length/total*100:0 },
             { label:'Missed',         val:missed,             sub:'Counted as 0%',      color:'#E24B4A', bg:'#FCEBEB', pct:total?missed/total*100:0 },
             { label:'Pending',        val:pending.length,     sub:'To complete',        color:'#BA7517', bg:'#FFF3E0', pct:total?pending.length/total*100:0 },
           ].map((s2, i) => (
-            <div key={i} style={{ ...s.statCard, borderTop:`3px solid ${s2.color}` }}>
+            <div key={i} style={{ ...s.statCard, borderTop:`3px solid ${s2.color}` }} className="sd-stat-card">
               <div style={{ ...s.statIcon, background:s2.bg, color:s2.color }}>
                 {i===0?'◎':i===1?'✓':i===2?'✗':'⏳'}
               </div>
@@ -157,11 +190,11 @@ export default function StudentDashboard() {
         </div>
 
         {/* ── Two column section ── */}
-        <div style={s.twoCol}>
+        <div style={s.twoCol} className="sd-two-col">
 
           {/* Pending tasks */}
-          <div style={s.panel}>
-            <div style={s.panelHead}>
+          <div style={s.panel} className="sd-panel">
+            <div style={s.panelHead} className="sd-panel-head">
               <span style={s.panelTitle}>⏳ Pending tasks</span>
               {pending.length > 0 && (
                 <span style={{ ...s.pill, background:'#FFF3E0', color:'#633806' }}>{pending.length} due</span>
@@ -175,14 +208,15 @@ export default function StudentDashboard() {
             ) : (
               pending.map(({ assessment: a }) => (
                 <div key={a.id} style={s.assessRow}
+                  className="sd-assess-row"
                   onMouseEnter={e => e.currentTarget.style.background='#fafbff'}
                   onMouseLeave={e => e.currentTarget.style.background='#fff'}
                   onClick={() => nav(`/assessment/${a.id}`)}>
-                  <div style={{ ...s.assessIcon, background:typeBg[a.type] }}>
+                  <div style={{ ...s.assessIcon, background:typeBg[a.type] }} className="sd-assess-icon">
                     <span style={{ fontSize:15 }}>{typeIcons[a.type]}</span>
                   </div>
                   <div style={{ flex:1, minWidth:0 }}>
-                    <div style={s.assessTitle}>{a.title}</div>
+                    <div style={s.assessTitle} className="sd-assess-title">{a.title}</div>
                     <div style={s.assessMeta}>{typeLabels[a.type]} · {a.subject}</div>
                   </div>
                   <div style={{ flexShrink:0, textAlign:'right' }}>
@@ -204,12 +238,12 @@ export default function StudentDashboard() {
                   MISSED ({missedItems.length})
                 </div>
                 {missedItems.map(({ assessment: a }) => (
-                  <div key={a.id} style={{ ...s.assessRow, background:'#fff8f8', cursor:'default' }}>
-                    <div style={{ ...s.assessIcon, background:'#FCEBEB' }}>
+                  <div key={a.id} style={{ ...s.assessRow, background:'#fff8f8', cursor:'default' }} className="sd-assess-row">
+                    <div style={{ ...s.assessIcon, background:'#FCEBEB' }} className="sd-assess-icon">
                       <span style={{ fontSize:15 }}>🚫</span>
                     </div>
                     <div style={{ flex:1, minWidth:0 }}>
-                      <div style={{ ...s.assessTitle, color:'#999' }}>{a.title}</div>
+                      <div style={{ ...s.assessTitle, color:'#999' }} className="sd-assess-title">{a.title}</div>
                       <div style={s.assessMeta}>{typeLabels[a.type]} · deadline passed</div>
                     </div>
                     <div style={{ flexShrink:0 }}>
@@ -222,8 +256,8 @@ export default function StudentDashboard() {
           </div>
 
           {/* Score by type */}
-          <div style={s.panel}>
-            <div style={s.panelHead}>
+          <div style={s.panel} className="sd-panel">
+            <div style={s.panelHead} className="sd-panel-head">
               <span style={s.panelTitle}>📊 Score by type</span>
             </div>
             {overall && overall.type_summary && overall.type_summary.length > 0 ? (
@@ -275,8 +309,8 @@ export default function StudentDashboard() {
         </div>
 
         {/* ── All assessments ── */}
-        <div style={s.panel}>
-          <div style={s.panelHead}>
+        <div style={s.panel} className="sd-panel">
+          <div style={s.panelHead} className="sd-panel-head">
             <span style={s.panelTitle}>📚 All assessments</span>
             <span style={{ fontSize:12, color:'#bbb' }}>From week 1 · missed = 0%</span>
           </div>
@@ -295,17 +329,18 @@ export default function StudentDashboard() {
                 ...s.assessRow,
                 background: item.status!=='submitted' ? '#fff9f9' : '#fff'
               }}
+                className="sd-assess-row"
                 onMouseEnter={e => e.currentTarget.style.background = item.status!=='submitted'?'#fff4f4':'#fafbff'}
                 onMouseLeave={e => e.currentTarget.style.background = item.status!=='submitted'?'#fff9f9':'#fff'}>
 
-                <div style={{ ...s.assessIcon, background: item.status==='submitted' ? scoreBg(item.score) : '#FCEBEB' }}>
+                <div style={{ ...s.assessIcon, background: item.status==='submitted' ? scoreBg(item.score) : '#FCEBEB' }} className="sd-assess-icon">
                   <span style={{ fontSize:14, color: item.status==='submitted' ? scoreColor(item.score) : '#E24B4A' }}>
                     {item.status==='submitted' ? '✓' : '✗'}
                   </span>
                 </div>
 
                 <div style={{ flex:1, minWidth:0 }}>
-                  <div style={{ ...s.assessTitle, color: item.status!=='submitted'?'#999':'#111' }}>
+                  <div style={{ ...s.assessTitle, color: item.status!=='submitted'?'#999':'#111' }} className="sd-assess-title">
                     {item.title}
                   </div>
                   <div style={s.assessMeta}>
